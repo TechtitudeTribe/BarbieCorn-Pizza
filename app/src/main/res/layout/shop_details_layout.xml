@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.cardview.widget.CardView
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/shop_details_card_layout"
+        android:layout_width="match_parent"
+        android:translationZ="5dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="15dp">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background_color">
+            <View
+                android:id="@+id/shop_details_relative_layout"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:background="@color/creative_green"/>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/shop_details_shop_image_card"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                app:cardCornerRadius="20dp"
+                android:translationZ="5dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="12dp">
+                <ImageView
+                    android:id="@+id/shop_details_shop_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/veg_pizza"
+                    android:scaleType="centerCrop"/>
+                <ProgressBar
+                    android:id="@+id/shop_details_progress_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminateTint="@color/creative_yellow_dark"
+                    android:layout_gravity="center"/>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/shop_details_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_toRightOf="@+id/shop_details_shop_image_card"
+                android:layout_marginTop="20dp"
+                android:gravity="right"
+                android:maxLines="1"
+                android:layout_marginRight="10dp"
+                android:textColor="@color/creative_green"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:text="Shop Name"
+                android:fontFamily="serif"/>
+            <TextView
+                android:id="@+id/shop_details_schedule"
+                android:layout_below="@+id/shop_details_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="9 a.m. - 10 p.m."
+                android:textSize="15sp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="5dp"
+                android:fontFamily="serif"
+                android:textStyle="bold"
+                android:textColor="@color/smoky_black"/>
+            <LinearLayout
+                android:translationY="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/shop_details_shop_image_card"
+                android:layout_alignParentRight="true"
+                android:orientation="horizontal">
+                <ImageView
+                    android:id="@+id/shop_details_phone"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/circular_background"
+                    android:backgroundTint="@color/white"
+                    android:src="@drawable/phone_call"
+                    app:tint="@color/smoky_black"
+                    android:translationX="10dp"
+                    android:layout_margin="10dp"/>
+                <ImageView
+                    android:id="@+id/shop_details_mail"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/circular_background"
+                    android:backgroundTint="@color/white"
+                    android:src="@drawable/email"
+                    app:tint="@color/smoky_black"
+                    android:layout_margin="10dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/shop_details_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/creative_green"
+                android:paddingTop="8dp"
+                android:textSize="14sp"
+                android:text="Open"
+                android:gravity="center_horizontal"
+                android:fontFamily="serif"
+                android:textColor="@color/white"
+                android:paddingBottom="8dp"
+                android:layout_below="@+id/shop_details_shop_image_card"/>
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+
+    <!---<ImageView
+        android:id="@+id/shop_details_status"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:src="@drawable/close"
+        android:translationZ="7dp"
+        app:tint="@color/smoky_black"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="22dp"
+        android:layout_marginTop="68dp"/>-->
+
+</RelativeLayout>

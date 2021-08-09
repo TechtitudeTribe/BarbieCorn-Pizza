@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MyFavoriteActivity">
+
+    <RelativeLayout
+        android:id="@+id/my_fav_header"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:translationZ="5dp"
+        android:translationY="-20dp"
+        android:background="@drawable/text_background"
+        android:backgroundTint="@color/white">
+
+        <com.github.siyamed.shapeimageview.mask.PorterShapeImageView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:alpha="0.3"
+            android:scaleType="centerCrop"
+            android:src="@drawable/main_screen_back"
+            android:tint="@color/smoky_black"
+            app:siShape="@drawable/text_background" />
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/fav"
+            app:tint="@color/white"
+            android:padding="20dp"
+            android:background="@drawable/circular_background"
+            android:backgroundTint="@color/creative_yellow_dark"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:translationZ="5dp"
+            android:translationY="25dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="My Favorites"
+            android:textSize="16sp"
+            android:translationZ="5dp"
+            android:background="@drawable/text_background"
+            android:backgroundTint="@color/creative_yellow_dark"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="40dp"
+            android:paddingRight="30dp"
+            android:paddingLeft="30dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginTop="125dp"
+            android:textColor="@color/white"
+            android:fontFamily="serif"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/no_fav_layout"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:translationY="100dp"
+        android:layout_centerInParent="true">
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/ic_baseline_favorite_120"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/circular_background"
+            android:backgroundTint="@color/creative_red"
+            app:tint="@color/white"
+            android:padding="20dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sorry!!!"
+            android:textSize="18sp"
+            android:textColor="@color/smoky_black"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:fontFamily="serif"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your favorite list is empty..."
+            android:textSize="14sp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="serif"/>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/my_fav_header">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/my_fav_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="20dp"/>
+        <ProgressBar
+            android:id="@+id/my_fav_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/creative_red"/>
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/fav_shop_item_names_text"
+        android:visibility="gone"
+        android:translationZ="10dp"
+        android:textColor="@color/black"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/local_fav_text"
+        android:visibility="gone"
+        android:translationZ="10dp"
+        android:textColor="@color/black"/>
+
+</RelativeLayout>

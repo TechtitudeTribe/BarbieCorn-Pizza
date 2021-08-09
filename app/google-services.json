@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "773001567986",
+    "project_id": "barbiecorn-pizza",
+    "storage_bucket": "barbiecorn-pizza.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773001567986:android:a52ac36eb352f6321bba6b",
+        "android_client_info": {
+          "package_name": "com.techtitudetribe.barbiecornpizza"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "773001567986-bh1r9047gqg3mj0cqvgjid56iajl6ijk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZBuTopxPxDhlsD3IFiJ5dqBQYZSEFTbI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "773001567986-bh1r9047gqg3mj0cqvgjid56iajl6ijk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

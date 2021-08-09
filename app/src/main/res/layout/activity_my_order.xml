@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MyOrderActivity"
+    android:background="@color/white">
+
+    <RelativeLayout
+        android:id="@+id/my_order_header"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:translationZ="5dp"
+        android:translationY="-20dp"
+        android:background="@drawable/text_background"
+        android:backgroundTint="@color/white">
+
+        <com.github.siyamed.shapeimageview.mask.PorterShapeImageView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:alpha="0.3"
+            android:scaleType="centerCrop"
+            android:src="@drawable/main_screen_back"
+            android:tint="@color/smoky_black"
+            app:siShape="@drawable/text_background" />
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/ic_orders"
+            android:padding="20dp"
+            android:background="@drawable/circular_background"
+            android:backgroundTint="@color/creative_yellow_dark"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:translationZ="5dp"
+            android:translationY="25dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/myOrders"
+            android:textSize="16sp"
+            android:translationZ="5dp"
+            android:background="@drawable/text_background"
+            android:backgroundTint="@color/creative_yellow_dark"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="40dp"
+            android:paddingRight="30dp"
+            android:paddingLeft="30dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginTop="125dp"
+            android:textColor="@color/white"
+            android:fontFamily="serif"/>
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_below="@+id/my_order_header"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginBottom="10dp">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/my_order_list_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"/>
+        <ProgressBar
+            android:id="@+id/my_orders_activity_progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminateTint="@color/creative_yellow_dark"
+            android:layout_gravity="center"
+            android:translationZ="5dp"/>
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/no_orders_layout"
+        android:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:translationY="100dp"
+        android:layout_centerInParent="true">
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_margin="10dp"
+            android:src="@drawable/no_orders"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/circular_background"
+            android:backgroundTint="@color/creative_red"
+            app:tint="@color/white"
+            android:padding="20dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sorry!!!"
+            android:textSize="18sp"
+            android:textColor="@color/smoky_black"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:fontFamily="serif"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Order is placed yet"
+            android:textSize="14sp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="serif"/>
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,689 @@
+package com.techtitudetribe.barbiecornpizza;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+public class OrderConfirmationActivity extends AppCompatActivity {
+
+    private TextView totalPrice;
+    private TextView itemNames;
+    private TextView proceedToPay;
+    private FirebaseAuth firebaseAuth;
+    private DatabaseReference cartRef, orderRef,userRef,adminRef;
+    private String currentUser,address,key;
+    private long orderItems=0,adminItems=0;
+    private TextView orderConfirmationDate,orderConfirmationNumbers;
+    private RadioGroup paymentMethod, orderType;
+    private String paymentMethodString="Pay via UPI", orderTypeString;
+    private TextView placeOrder;
+    private String TAG ="main";
+    private final int UPI_PAYMENT = 0;
+    private TextView orderConfirmationDescription,sellerId,shopName,userName,userContact,deliveryCharge,actualPrice,orderShopUpi;
+    private ProgressBar placeProgressBar;
+    private String sellerIdGlobal,isApplied="";
+    private TextView applyFirstOffer, cancelFirstOrder;
+    private RelativeLayout firstOfferLayout;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_order_confirmation);
+
+        sellerIdGlobal = getIntent().getStringExtra("sellerId");
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser().getUid();
+        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
+        orderRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyOrders");
+        adminRef = FirebaseDatabase.getInstance().getReference().child("Sellers").child(sellerIdGlobal).child("MyOrders");
+        userRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser);
+
+        firstOfferLayout = (RelativeLayout) findViewById(R.id.first_order_offer_main);
+        applyFirstOffer = (TextView) findViewById(R.id.apply_first_order_offer);
+        cancelFirstOrder = (TextView) findViewById(R.id.close_first_order_offer);
+
+
+        totalPrice = (TextView) findViewById(R.id.order_total_price);
+        itemNames = (TextView) findViewById(R.id.order_confirmation_item_names);
+        proceedToPay = (TextView) findViewById(R.id.order_confirmation_proceed_to_pay);
+        orderConfirmationDate = (TextView) findViewById(R.id.order_confirmation_date);
+        orderConfirmationNumbers = (TextView) findViewById(R.id.total_no_of_orders);
+        placeOrder = (TextView) findViewById(R.id.order_confirmation_place_order);
+        orderConfirmationDescription = (TextView) findViewById(R.id.order_confirmation_item_description);
+        placeProgressBar = (ProgressBar) findViewById(R.id.place_order_progress_bar);
+        deliveryCharge = (TextView) findViewById(R.id.delivery_charge);
+        actualPrice = (TextView) findViewById(R.id.order_confirmation_price);
+        orderShopUpi = (TextView) findViewById(R.id.order_shop_upi);
+
+        sellerId = (TextView) findViewById(R.id.order_seller_id);
+        shopName = (TextView) findViewById(R.id.order_shop_name);
+        userName = (TextView) findViewById(R.id.order_user_name);
+        userContact = (TextView) findViewById(R.id.order_user_number);
+
+        paymentMethod = (RadioGroup) findViewById(R.id.payment_method);
+        orderType = (RadioGroup) findViewById(R.id.order_type);
+
+        sellerId.setText(getIntent().getStringExtra("sellerId"));
+        shopName.setText(getIntent().getStringExtra("shopName"));
+        key = getIntent().getStringExtra("key");
+
+        paymentMethod.clearCheck();
+        orderType.clearCheck();
+
+        actualPrice.setText(getIntent().getExtras().getString("totalPrice"));
+        itemNames.setText(getIntent().getExtras().getString("itemName"));
+        orderConfirmationDescription.setText(getIntent().getExtras().getString("itemDescription"));
+        address = getIntent().getStringExtra("address");
+
+        cartRef.child(shopName.getText().toString()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+                    String upi = snapshot.child("upi").getValue().toString();
+                    orderShopUpi.setText(upi);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        cartRef.child(shopName.getText().toString()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.hasChild("deliveryCharge"))
+                {
+                    String dc = snapshot.child("deliveryCharge").getValue().toString();
+                    deliveryCharge.setText(dc);
+                    totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
+                }
+                else
+                {
+                    deliveryCharge.setText("00");
+                    totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        orderConfirmationNumbers.setText(getResources().getString(R.string.totalItems)+getIntent().getExtras().getString("itemNumbers"));
+
+        userRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.hasChild("FirstOrder"))
+                {
+                    firstOfferLayout.setVisibility(View.GONE);
+                }
+                else
+                {
+                    firstOfferLayout.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        Calendar calendar = Calendar.getInstance();
+        String currentDate = DateFormat.getDateInstance(DateFormat.MEDIUM).format(calendar.getTime());
+
+        paymentMethod.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                RadioButton radioButton = (RadioButton) radioGroup.findViewById(i);
+                paymentMethodString = radioButton.getText().toString();
+                if (paymentMethodString.equals("Pay via UPI"))
+                {
+                    proceedToPay.setVisibility(View.VISIBLE);
+                    placeOrder.setVisibility(View.GONE);
+                }
+                else
+                {
+                    proceedToPay.setVisibility(View.GONE);
+                    placeOrder.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        orderType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+                RadioButton radioButton = (RadioButton) radioGroup.findViewById(i);
+                orderTypeString = radioButton.getText().toString();
+                if(orderTypeString.equals("Dine In"))
+                {
+                    deliveryCharge.setText("00");
+                    totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())));
+                }
+                else
+                {
+                    cartRef.child(shopName.getText().toString()).addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.hasChild("deliveryCharge"))
+                            {
+                                String dc = snapshot.child("deliveryCharge").getValue().toString();
+                                deliveryCharge.setText(dc);
+                                totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+            }
+        });
+
+        adminRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+                    adminItems = snapshot.getChildrenCount();
+                }
+                else
+                {
+                    adminItems=0;
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        userRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String name = snapshot.child("Name").getValue().toString();
+                String contact = snapshot.child("ContactNumber").getValue().toString();
+
+                userName.setText(name);
+                userContact.setText(contact);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        orderConfirmationDate.setText(getResources().getString(R.string.orderWillBePlaced)+"\n"+currentDate);
+
+        cancelFirstOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                firstOfferLayout.setVisibility(View.GONE);
+            }
+        });
+
+        applyFirstOffer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!applyFirstOffer.getText().toString().equals("Applied"))
+                {
+                    double discount = Integer.parseInt(totalPrice.getText().toString()) * 0.1;
+                    double finalAmount = Integer.parseInt(totalPrice.getText().toString()) - discount;
+                    totalPrice.setText(String.valueOf(finalAmount));
+                    applyFirstOffer.setText("Applied");
+                    isApplied = "Yes";
+                }
+            }
+        });
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMd", Locale.getDefault());
+        String currentDateAdmin = sdf.format(new Date());
+        orderRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+                    orderItems = snapshot.getChildrenCount();
+                }
+                else
+                {
+                    orderItems=0;
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        placeOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                checkValidations(currentDate);
+            }
+        });
+
+        proceedToPay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (TextUtils.isEmpty(paymentMethodString))
+                {
+                    Toast.makeText(getApplicationContext(), "Select any Payment Method...", Toast.LENGTH_SHORT).show();
+                }else if (TextUtils.isEmpty(orderTypeString))
+                {
+                    Toast.makeText(getApplicationContext(), "Select any Order Type...", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    //6397213673@ybl
+                    payUsingUpi("BarbieCorn Pizza", orderShopUpi.getText().toString(),
+                            "Food Items", totalPrice.getText().toString());
+
+                }
+            }
+        });
+
+        //updateToken();
+
+    }
+
+    /*private void updateToken() {
+        FirebaseUser firebaseUser= FirebaseAuth.getInstance().getCurrentUser();
+        String refreshToken= FirebaseInstanceId.getInstance().getToken();
+        Token token= new Token(refreshToken);
+        FirebaseDatabase.getInstance().getReference("Tokens").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(token);
+    }*/
+
+    private void payUsingUpi(String name, String upiId, String note, String amount) {
+        Log.e("main ", "name "+name +"--up--"+upiId+"--"+ note+"--"+amount);
+        Uri uri = Uri.parse("upi://pay").buildUpon()
+                .appendQueryParameter("pa", upiId)
+                .appendQueryParameter("pn", name)
+                .appendQueryParameter("tn", note)
+                .appendQueryParameter("am", amount)
+                .appendQueryParameter("cu", "INR")
+                .build();
+        Intent upiPayIntent = new Intent(Intent.ACTION_VIEW);
+        upiPayIntent.setData(uri);
+        // will always show a dialog to user to choose an app
+        Intent chooser = Intent.createChooser(upiPayIntent, "Pay with");
+        // check if intent resolves
+        if(null != chooser.resolveActivity(getPackageManager())) {
+            startActivityForResult(chooser, UPI_PAYMENT);
+        } else {
+            Toast.makeText(OrderConfirmationActivity.this,"No UPI app found, please install one to continue",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void checkValidations(String currentDate) {
+        if (TextUtils.isEmpty(paymentMethodString))
+        {
+            Toast.makeText(this, "Select any Payment Method...", Toast.LENGTH_SHORT).show();
+        }else if (TextUtils.isEmpty(orderTypeString))
+        {
+            Toast.makeText(this, "Select any Order Type...", Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            placeProgressBar.setVisibility(View.VISIBLE);
+            placeOrder.setVisibility(View.GONE);
+            proceedToPay.setVisibility(View.GONE);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
+            String currentDateandTime = sdf.format(new Date());
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
+            String currentTime = simpleDateFormat.format(Calendar.getInstance().getTime());
+
+            if (isApplied.equals("Yes"))
+            {
+                HashMap hashMap3 = new HashMap();
+                hashMap3.put("FirstOrder","Yes");
+
+                userRef.updateChildren(hashMap3);
+            }
+
+            HashMap hashMap = new HashMap();
+            hashMap.put("itemNames",itemNames.getText().toString());
+            hashMap.put("itemNumber",getIntent().getExtras().getString("itemNumbers"));
+            hashMap.put("count",orderItems+1);
+            hashMap.put("itemTotalAmount",totalPrice.getText().toString());
+            hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
+            hashMap.put("itemStatus","Ordered");
+            hashMap.put("userId",currentUser);
+            hashMap.put("paymentMethod",paymentMethodString);
+            hashMap.put("orderType",orderTypeString);
+            hashMap.put("address",address);
+            hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
+
+
+            orderRef.child("MyOrder"+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                    if (error!=null)
+                    {
+                        String message = error.getMessage().toString();
+                        Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
+                    }
+                    else
+                    {
+                        sendUserDetailsToAdmin(currentDate,currentDateandTime,currentTime);
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.e("main ", "response "+resultCode );
+        /*
+       E/main: response -1
+       E/UPI: onActivityResult: txnId=AXI4a3428ee58654a938811812c72c0df45&responseCode=00&Status=SUCCESS&txnRef=922118921612
+       E/UPIPAY: upiPaymentDataOperation: txnId=AXI4a3428ee58654a938811812c72c0df45&responseCode=00&Status=SUCCESS&txnRef=922118921612
+       E/UPI: payment successfull: 922118921612
+         */
+        switch (requestCode) {
+            case UPI_PAYMENT:
+                if ((RESULT_OK == resultCode) || (resultCode == 11)) {
+                    if (data != null) {
+                        String trxt = data.getStringExtra("response");
+                        Log.e("UPI", "onActivityResult: " + trxt);
+                        ArrayList<String> dataList = new ArrayList<>();
+                        dataList.add(trxt);
+                        upiPaymentDataOperation(dataList);
+                    } else {
+                        Log.e("UPI", "onActivityResult: " + "Return data is null");
+                        ArrayList<String> dataList = new ArrayList<>();
+                        dataList.add("nothing");
+                        upiPaymentDataOperation(dataList);
+                    }
+                } else {
+                    //when user simply back without payment
+                    Log.e("UPI", "onActivityResult: " + "Return data is null");
+                    ArrayList<String> dataList = new ArrayList<>();
+                    dataList.add("nothing");
+                    upiPaymentDataOperation(dataList);
+                }
+                break;
+        }
+    }
+    private void upiPaymentDataOperation(ArrayList<String> data) {
+        if (isConnectionAvailable(OrderConfirmationActivity.this)) {
+            String str = data.get(0);
+            Log.e("UPIPAY", "upiPaymentDataOperation: "+str);
+            String paymentCancel = "";
+            if(str == null) str = "discard";
+            String status = "";
+            String approvalRefNo = "";
+            String response[] = str.split("&");
+            for (int i = 0; i < response.length; i++) {
+                String equalStr[] = response[i].split("=");
+                if(equalStr.length >= 2) {
+                    if (equalStr[0].toLowerCase().equals("Status".toLowerCase())) {
+                        status = equalStr[1].toLowerCase();
+                    }
+                    else if (equalStr[0].toLowerCase().equals("ApprovalRefNo".toLowerCase()) || equalStr[0].toLowerCase().equals("txnRef".toLowerCase())) {
+                        approvalRefNo = equalStr[1];
+                    }
+                }
+                else {
+                    paymentCancel = "Payment cancelled by user.";
+                }
+            }
+            if (status.equals("success")) {
+                //Code to handle successful transaction here.
+                Toast.makeText(OrderConfirmationActivity.this, "Transaction successful.", Toast.LENGTH_SHORT).show();
+                Calendar calendar = Calendar.getInstance();
+                String currentDate = DateFormat.getDateInstance(DateFormat.MEDIUM).format(calendar.getTime());
+                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyyMd", Locale.getDefault());
+                String currentDateAdmin = sdf1.format(new Date());
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
+                String currentDateandTime = sdf.format(new Date());
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("hh:mm a");
+                String currentTime = simpleDateFormat.format(Calendar.getInstance().getTime());
+
+                if (isApplied.equals("Yes"))
+                {
+                    HashMap hashMap3 = new HashMap();
+                    hashMap3.put("FirstOrder","Yes");
+
+                    userRef.updateChildren(hashMap3);
+                }
+
+                HashMap hashMap = new HashMap();
+                hashMap.put("itemNames",itemNames.getText().toString());
+                hashMap.put("itemNumber",getIntent().getExtras().getString("itemNumbers"));
+                hashMap.put("count",orderItems+1);
+                hashMap.put("itemTotalAmount",totalPrice.getText().toString());
+                hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
+                hashMap.put("itemStatus","Ordered");
+                hashMap.put("userId",currentUser);
+                hashMap.put("paymentMethod",paymentMethodString);
+                hashMap.put("orderType",orderTypeString);
+                hashMap.put("address",address);
+                hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
+
+                orderRef.child(currentDateAdmin).child("MyOrder"+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+                    @Override
+                    public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                        if (error!=null)
+                        {
+                            String message = error.getMessage().toString();
+                            Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
+                        }
+                        else
+                        {
+                            sendUserDetailsToAdminPay(currentDate,currentDateandTime,currentTime);
+                        }
+                    }
+                });
+                Log.e("UPI", "payment successfull: "+approvalRefNo);
+            }
+            else if("Payment cancelled by user.".equals(paymentCancel)) {
+                Toast.makeText(OrderConfirmationActivity.this, "Payment cancelled by user.", Toast.LENGTH_SHORT).show();
+                Log.e("UPI", "Cancelled by user: "+approvalRefNo);
+            }
+            else {
+                Toast.makeText(OrderConfirmationActivity.this, "Transaction failed.Please try again", Toast.LENGTH_SHORT).show();
+                Log.e("UPI", "failed payment: "+approvalRefNo);
+            }
+        } else {
+            Log.e("UPI", "Internet issue: ");
+            Toast.makeText(OrderConfirmationActivity.this, "Internet connection is not available. Please check and try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+    public static boolean isConnectionAvailable(OrderConfirmationActivity context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo netInfo = connectivityManager.getActiveNetworkInfo();
+            if (netInfo != null && netInfo.isConnected()
+                    && netInfo.isConnectedOrConnecting()
+                    && netInfo.isAvailable()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void sendUserDetailsToAdmin(String currentDate, String currentDateandTime, String currentTime)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMd", Locale.getDefault());
+        String currentDateAdmin = sdf.format(new Date());
+
+        HashMap hashMap = new HashMap();
+        hashMap.put("itemNames",itemNames.getText().toString());
+        hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
+        hashMap.put("count",adminItems+1);
+        hashMap.put("itemTotalAmount",totalPrice.getText().toString());
+        hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
+        hashMap.put("itemStatus","Ordered");
+        hashMap.put("userId",currentUser);
+        hashMap.put("paymentMethod",paymentMethodString);
+        hashMap.put("orderType",orderTypeString);
+        hashMap.put("address",address);
+        hashMap.put("deliveryCharge",deliveryCharge.getText().toString());
+        hashMap.put("titleName","MyOrder"+currentDateandTime);
+        hashMap.put("customerName",userName.getText().toString());
+        hashMap.put("customerNumber",userContact.getText().toString());
+        hashMap.put("shopName",shopName.getText().toString());
+
+        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
+                if (error1!=null)
+                {
+                    String message = error1.getMessage().toString();
+                    Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
+                    placeProgressBar.setVisibility(View.GONE);
+                    placeOrder.setVisibility(View.VISIBLE);
+                    proceedToPay.setVisibility(View.GONE);
+                }
+                else
+                {
+                    Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
+                    proceedToPay.setVisibility(View.GONE);
+                    placeOrder.setVisibility(View.GONE);
+                    placeProgressBar.setVisibility(View.GONE);
+                    cartRef.child(shopName.getText().toString()).removeValue();
+                    FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            String usertoken=dataSnapshot.getValue(String.class);
+
+                            FcmNotificationSender notificationSender = new FcmNotificationSender(usertoken,"Alert","New Order is placed...",getApplicationContext(),OrderConfirmationActivity.this);
+                            notificationSender.SendNotifications();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void sendUserDetailsToAdminPay(String currentDate, String currentDateandTime, String currentTime)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMd", Locale.getDefault());
+        String currentDateAdmin = sdf.format(new Date());
+
+
+        HashMap hashMap = new HashMap();
+        hashMap.put("itemNames",itemNames.getText().toString());
+        hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
+        hashMap.put("count",adminItems+1);
+        hashMap.put("itemTotalAmount",totalPrice.getText().toString());
+        hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
+        hashMap.put("itemStatus","Ordered");
+        hashMap.put("userId",currentUser);
+        hashMap.put("paymentMethod",paymentMethodString);
+        hashMap.put("orderType",orderTypeString);
+        hashMap.put("address",address);
+        hashMap.put("deliveryCharge",deliveryCharge.getText().toString());
+        hashMap.put("titleName","MyOrder"+currentDateandTime);
+        hashMap.put("customerName",userName.getText().toString());
+        hashMap.put("customerNumber",userContact.getText().toString());
+        hashMap.put("shopName",shopName.getText().toString());
+
+        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
+                if (error1!=null)
+                {
+                    String message = error1.getMessage().toString();
+                    Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
+                    placeProgressBar.setVisibility(View.GONE);
+                    proceedToPay.setVisibility(View.VISIBLE);
+                }
+                else
+                {
+                    Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
+                    proceedToPay.setVisibility(View.GONE);
+                    placeOrder.setVisibility(View.GONE);
+                    placeProgressBar.setVisibility(View.GONE);
+                    cartRef.child(shopName.getText().toString()).removeValue();
+                    FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            String usertoken=dataSnapshot.getValue(String.class);
+
+                            FcmNotificationSender notificationSender = new FcmNotificationSender(usertoken,"Alert","New Order is placed...",getApplicationContext(),OrderConfirmationActivity.this);
+                            notificationSender.SendNotifications();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /*public void sendNotifications(String usertoken, String title, String message) {
+        Data data = new Data(title, message);
+        NotificationSender sender = new NotificationSender(data, usertoken);
+        apiService.sendNotifcation(sender).enqueue(new Callback<MyResponse>() {
+            @Override
+            public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                if (response.code() == 200) {
+                    if (response.body().success != 1) {
+                        Toast.makeText(OrderConfirmationActivity.this, "Failed ", Toast.LENGTH_LONG);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MyResponse> call, Throwable t) {
+
+            }
+        });
+    }*/
+}

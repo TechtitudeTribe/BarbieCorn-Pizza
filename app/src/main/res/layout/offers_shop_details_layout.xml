@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="15dp"
+    android:layout_margin="10dp"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <View
+            android:id="@+id/offers_shop_details_relative_layout"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:background="@color/creative_red"/>
+        <androidx.cardview.widget.CardView
+            android:id="@+id/offers_shop_details_shop_image_card"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="10dp"
+            android:translationZ="-2dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginBottom="10dp">
+            <ImageView
+                android:id="@+id/offers_shop_details_shop_image"
+                android:scaleType="centerCrop"
+                android:layout_width="80dp"
+                android:layout_height="80dp" />
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/offers_shop_details_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_toRightOf="@+id/offers_shop_details_shop_image_card"
+            android:gravity="right"
+            android:maxLines="1"
+            android:layout_marginRight="10dp"
+            android:textColor="@color/smoky_black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="Shop Name"
+            android:layout_alignBottom="@+id/offers_shop_details_shop_image_card"
+            android:fontFamily="serif"/>
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
