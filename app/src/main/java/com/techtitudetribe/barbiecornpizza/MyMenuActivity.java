@@ -673,10 +673,10 @@ public class MyMenuActivity extends AppCompatActivity {
                                     
                                     Map<String, Object> hashMap = new HashMap<>();
                                     hashMap.put("count",favItems+1);
-                                    hashMap.put("shopName", shopName);
-                                    hashMap.put("sellerId", userId);
-                                    hashMap.put("deliveryCharge",getIntent().getStringExtra("deliveryCharge"));
-                                    hashMap.put("upi",getIntent().getStringExtra("upi"));
+                                    hashMap.put("shopName", shopAddress.getText().toString());
+                                    hashMap.put("sellerId", userId.getText().toString());
+                                    hashMap.put("deliveryCharge",deliveryCharge.getText().toString());
+                                    hashMap.put("upi",upi.getText().toString());
                                     hashMap.put("itemName",menuItemAdapter.getName());
                                     hashMap.put("itemPrice",menuItemAdapter.getPrice());
                                     hashMap.put("itemImage",menuItemAdapter.getImage());
