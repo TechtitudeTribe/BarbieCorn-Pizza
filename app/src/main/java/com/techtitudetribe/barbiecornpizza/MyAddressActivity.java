@@ -172,26 +172,12 @@ public class MyAddressActivity extends AppCompatActivity {
                     hashMap.put("address",houseNo.getText().toString()+", "+area.getText().toString()+", near "+landmark.getText().toString()+", "+town.getText().toString()+" - "+pincode.getText().toString());
 
 
-                    addressRef.child("Address"+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                        @Override
-                        public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                            if (error!=null)
-                            {
-                                String message = error.getMessage().toString();
-                                Toast.makeText(MyAddressActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                                newAddProgressBar.setVisibility(View.GONE);
-                            }
-                            else
-                            {
-                                Toast.makeText(MyAddressActivity.this, "Address has been updated successfully...", Toast.LENGTH_SHORT).show();
-                                newAddressLayout.setVisibility(View.GONE);
-                                newAddressLayout.startAnimation(zoom_out);
-                                floatingActionButton.startAnimation(clockwise);
-                                rotation=true;
-                                newAddProgressBar.setVisibility(View.GONE);
-                            }
-                        }
-                    });
+                    addressRef.child("Address"+currentDateandTime).updateChildren(hashMap);
+                    newAddressLayout.setVisibility(View.GONE);
+                    newAddressLayout.startAnimation(zoom_out);
+                    floatingActionButton.startAnimation(clockwise);
+                    rotation=true;
+                    newAddProgressBar.setVisibility(View.GONE);
                 }
             }
         });

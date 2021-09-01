@@ -572,23 +572,11 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
                             hashMap.put("itemPrice", totalCostText.getText().toString());
                             hashMap.put("itemDescription", "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
 
-                            favRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                    if (error!=null)
-                                    {
-                                        favButon.setVisibility(View.VISIBLE);
-                                        favProgressBar.setVisibility(View.GONE);
-                                        Toast.makeText(MenuItemDescriptionActivity.this, "Error Occurred : " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                    else
-                                    {
-                                        favButon.setVisibility(View.GONE);
-                                        favProgressBar.setVisibility(View.GONE);
-                                        Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
+                            favRef.updateChildren(hashMap);
+                            favButon.setVisibility(View.GONE);
+                            favProgressBar.setVisibility(View.GONE);
+                            Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
+
                         } else {
                             favButon.setVisibility(View.GONE);
                             favProgressBar.setVisibility(View.VISIBLE);
@@ -606,23 +594,11 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
                             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
                             String currentDateandTime = sdf.format(new Date());
 
-                            FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyFavorites").child("MyFav" + currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                    if(error!=null)
-                                    {
-                                        favButon.setVisibility(View.VISIBLE);
-                                        favProgressBar.setVisibility(View.GONE);
-                                        Toast.makeText(MenuItemDescriptionActivity.this, "Error Occurred : " + error.getMessage().toString(), Toast.LENGTH_SHORT).show();
-                                    }
-                                    else
-                                    {
-                                        favButon.setVisibility(View.GONE);
-                                        favProgressBar.setVisibility(View.GONE);
-                                        Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
+                            FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyFavorites").child("MyFav" + currentDateandTime).updateChildren(hashMap);
+                            favButon.setVisibility(View.GONE);
+                            favProgressBar.setVisibility(View.GONE);
+                            Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
+
                         }
 
                     }
@@ -664,27 +640,12 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
                                     hashMap.put("itemCustomizedPrice", totalCostText.getText().toString());
                                     hashMap.put("itemDescription", "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
 
-                                    cartRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                        @Override
-                                        public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                            if (error!=null)
-                                            {
-                                                String message = error.getMessage();
-                                                Toast.makeText(getApplicationContext(), "Error Occurred : " + message, Toast.LENGTH_SHORT).show();
-                                                cartProgressBar.setVisibility(View.GONE);
-                                                viewCart.setVisibility(View.GONE);
-                                                addToCart.setVisibility(View.VISIBLE);
-                                            }
-                                            else
-                                            {
-                                                Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                                addToCart.setVisibility(View.GONE);
-                                                cartProgressBar.setVisibility(View.GONE);
-                                                viewCart.setVisibility(View.VISIBLE);
-                                            }
-                                        }
-                                    });
-                                } else {
+                                    cartRef.updateChildren(hashMap);
+                                    Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
+                                    addToCart.setVisibility(View.GONE);
+                                    cartProgressBar.setVisibility(View.GONE);
+                                    viewCart.setVisibility(View.VISIBLE);
+                                } else     {
                                     HashMap hashMap1 = new HashMap();
                                     hashMap1.put("count", shopItems + 1);
                                     hashMap1.put("itemNames", shopItemNamesText.getText().toString() + itemName.getText().toString());
@@ -693,18 +654,7 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
                                     hashMap1.put("deliveryCharge", getIntent().getStringExtra("deliveryCharge"));
                                     hashMap1.put("upi", getIntent().getStringExtra("upi"));
 
-                                    FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(shopName).updateChildren(hashMap1, new DatabaseReference.CompletionListener() {
-                                        @Override
-                                        public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
-                                            if (error1!=null)
-                                            {
-                                                String message = error1.getMessage();
-                                                Toast.makeText(getApplicationContext(), "Error Occurred : " + message, Toast.LENGTH_SHORT).show();
-                                                cartProgressBar.setVisibility(View.GONE);
-                                                viewCart.setVisibility(View.GONE);
-                                                addToCart.setVisibility(View.VISIBLE);
-                                            }
-                                            else
+                                    FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(shopName).updateChildren(hashMap1);
                                             {
                                                 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
                                                 String currentDateandTime = sdf.format(new Date());
@@ -719,29 +669,13 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
                                                 hashMap.put("itemQuantity", "1");
 
                                                 FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(shopName).child("CartItems").child("CartItem" + currentDateandTime)
-                                                        .updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                                            @Override
-                                                            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                                                if(error!=null)
-                                                                {
-                                                                    String message = error.getMessage();
-                                                                    Toast.makeText(getApplicationContext(), "Error Occurred : " + message, Toast.LENGTH_SHORT).show();
-                                                                    cartProgressBar.setVisibility(View.GONE);
-                                                                    viewCart.setVisibility(View.GONE);
-                                                                    addToCart.setVisibility(View.VISIBLE);
-                                                                }
-                                                                else
-                                                                {
-                                                                    Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                                                    addToCart.setVisibility(View.GONE);
-                                                                    cartProgressBar.setVisibility(View.GONE);
-                                                                    viewCart.setVisibility(View.VISIBLE);
-                                                                }
-                                                            }
-                                                        });
+                                                        .updateChildren(hashMap);
+                                                Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
+                                                addToCart.setVisibility(View.GONE);
+                                                cartProgressBar.setVisibility(View.GONE);
+                                                viewCart.setVisibility(View.VISIBLE);
                                             }
-                                        }
-                                    });
+
                                 }
                             }
 

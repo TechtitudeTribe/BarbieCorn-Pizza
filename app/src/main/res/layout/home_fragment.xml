@@ -193,7 +193,61 @@
                     </RelativeLayout>
                 </LinearLayout>
 
-
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/login_text_background">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=": Track Your Order Here :"
+                        android:fontFamily="serif"
+                        android:textSize="15sp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/smoky_black"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/creative_red"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginRight="30dp"
+                        android:layout_marginLeft="30dp"/>
+                    <TextView
+                        android:id="@+id/home_no_recent_orders"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/smoky_black"
+                        android:text="No recent Orders"
+                        android:fontFamily="serif"
+                        android:textSize="14sp"
+                        android:layout_marginTop="10dp"
+                        android:visibility="visible"
+                        android:layout_marginBottom="20dp"
+                        android:layout_gravity="center_horizontal"/>
+                    <TextView
+                        android:id="@+id/home_track_orders"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:text="@string/trackOrder"
+                        android:paddingRight="30dp"
+                        android:paddingLeft="30dp"
+                        android:paddingTop="9dp"
+                        android:visibility="gone"
+                        android:paddingBottom="9dp"
+                        android:background="@drawable/text_background"
+                        android:backgroundTint="@color/creative_red"
+                        android:fontFamily="serif"
+                        android:textSize="14sp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="20dp"
+                        android:layout_gravity="center_horizontal"/>
+                </LinearLayout>
                 <LinearLayout
                     android:layout_gravity="center"
                     android:layout_width="wrap_content"
@@ -409,7 +463,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/everday_offer" />
+                            android:src="@drawable/everyday_offer" />
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView
                         android:id="@+id/festival_offers"
@@ -426,7 +480,7 @@
                             android:src="@drawable/festival_offer" />
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView
-                        android:id="@+id/weekend_offers"
+                        android:id="@+id/special_time_offers"
                         android:layout_width="300dp"
                         android:layout_height="160dp"
                         app:cardCornerRadius="10dp"
@@ -437,7 +491,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/friday_offer" />
+                            android:src="@drawable/special_time_offer" />
                     </androidx.cardview.widget.CardView>
                     <androidx.cardview.widget.CardView
                         android:id="@+id/friday_offers"
@@ -451,7 +505,22 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/everday_offer" />
+                            android:src="@drawable/friday_offer" />
+                    </androidx.cardview.widget.CardView>
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/bestseller_offers"
+                        android:visibility="visible"
+                        android:layout_width="300dp"
+                        android:layout_height="160dp"
+                        app:cardCornerRadius="10dp"
+                        android:layout_margin="5dp"
+                        android:layout_gravity="center">
+
+                        <ImageView
+                            android:layout_width="300dp"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/bestseller_offer" />
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
             </HorizontalScrollView>
@@ -459,4 +528,15 @@
         </LinearLayout>
     </ScrollView>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/offers_validation"
+        android:visibility="gone"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/track_id_home"
+        android:visibility="gone"/>
 </RelativeLayout>

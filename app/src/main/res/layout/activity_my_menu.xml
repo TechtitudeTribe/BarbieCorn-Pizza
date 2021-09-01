@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="160dp"
         android:translationZ="5dp"
+        android:visibility="gone"
         android:layout_margin="10dp"
         android:background="@drawable/text_background"
         android:backgroundTint="@color/white">
@@ -371,8 +372,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/menu_list_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"/>
+            android:layout_height="wrap_content"/>
         <ProgressBar
             android:id="@+id/menu_fragment_progress_bar"
             android:layout_width="wrap_content"
@@ -397,7 +397,7 @@
         android:layout_height="wrap_content"
         android:text="No"
         android:id="@+id/fav_menu_iten_name_text"
-        android:visibility="visible"/>
+        android:visibility="gone"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

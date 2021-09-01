@@ -55,7 +55,7 @@
     <string name="total">Total</string>
     <string name="proceedToPay">Proceed To Pay</string>
     <string name="placeOrder">Place Order</string>
-    <string name="cashOnDelivery">Cash on Delivery</string>
+    <string name="cashOnDelivery">Cash</string>
     <string name="payViaUPI">Pay via UPI</string>
     <string name="dineIn">Dine In</string>
     <string name="deliver">Deliver</string>

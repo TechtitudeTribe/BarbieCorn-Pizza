@@ -202,6 +202,15 @@
                             android:text="@string/deliver"
                             android:fontFamily="serif"
                             android:textSize="14sp"/>
+                        <RadioButton
+                            android:layout_marginLeft="20dp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/Takeaway"
+                            android:buttonTint="@color/creative_red"
+                            android:text="Takeaway"
+                            android:fontFamily="serif"
+                            android:textSize="14sp"/>
                     </RadioGroup>
                 </LinearLayout>
             </RelativeLayout>
@@ -426,8 +435,7 @@
         android:id="@+id/first_order_offer_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:translationZ="10dp"
-        >
+        android:translationZ="10dp">
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -439,35 +447,36 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             app:cardCornerRadius="15dp"
+            android:visibility="visible"
             android:layout_margin="20dp"
             android:translationZ="3dp">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="80dp"
-                android:background="@color/creative_red">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Discount\nOffer"
-                    android:textColor="@color/white"
-                    android:fontFamily="serif"
-                    android:textSize="16sp"
-                    android:layout_margin="10dp"
-                    android:layout_alignParentBottom="true"
-                    android:textStyle="bold"/>
-                <ImageView
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:src="@drawable/discount"
-                    android:layout_margin="10dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentRight="true"
-                    app:tint="@color/white"/>
-            </RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:background="@color/creative_red">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Discount\nOffer"
+                        android:textColor="@color/white"
+                        android:fontFamily="serif"
+                        android:textSize="16sp"
+                        android:layout_margin="10dp"
+                        android:layout_alignParentBottom="true"
+                        android:textStyle="bold"/>
+                    <ImageView
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:src="@drawable/discount"
+                        android:layout_margin="10dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentRight="true"
+                        app:tint="@color/white"/>
+                </RelativeLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -523,6 +532,7 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
         <TextView
             android:id="@+id/close_first_order_offer"
             android:layout_width="match_parent"
@@ -545,4 +555,97 @@
             android:backgroundTint="@color/smoky_black"/>
     </RelativeLayout>
 
+
+    <RelativeLayout
+        android:id="@+id/distance_condition_card"
+        android:layout_width="match_parent"
+        android:visibility="gone"
+        android:layout_height="match_parent"
+        android:translationZ="15dp">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@color/smoky_black"
+            android:alpha="0.2"/>
+        <androidx.cardview.widget.CardView
+            android:id="@+id/distance_condition_card_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            app:cardCornerRadius="15dp"
+            android:translationZ="10dp"
+            android:layout_margin="20dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:background="@color/creative_red">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Distance\nCondition"
+                        android:textColor="@color/white"
+                        android:fontFamily="serif"
+                        android:textSize="16sp"
+                        android:layout_margin="10dp"
+                        android:layout_alignParentBottom="true"
+                        android:textStyle="bold"/>
+                    <ImageView
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:src="@drawable/discount"
+                        android:layout_margin="10dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignParentRight="true"
+                        app:tint="@color/white"/>
+                </RelativeLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="40dp"
+                    android:background="@color/white">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="serif"
+                        android:textSize="15sp"
+                        android:layout_gravity="center_horizontal"
+                        android:text="\n \u25CF Minimum Order should be of Rs 200.\n \u25CF For 3km-5km range,\n    order should be of Rs 500.\n \u25CF For 5km-7km range,\n    order should be of Rs 800.\n \u25CF For 7km-10km range,\n    order should be of Rs 1000."/>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+        <TextView
+            android:id="@+id/close_distance_condition_offer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ok!"
+            android:textSize="16sp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="40dp"
+            android:translationZ="15dp"
+            android:paddingRight="15dp"
+            android:gravity="center_horizontal"
+            android:layout_alignBottom="@+id/distance_condition_card_layout"
+            android:translationY="19dp"
+            android:paddingLeft="15dp"
+            android:fontFamily="serif"
+            android:textColor="@color/white"
+            android:background="@drawable/text_background"
+            android:backgroundTint="@color/smoky_black"/>
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/seller_number_order_confirmation"
+        android:visibility="gone"/>
 </RelativeLayout>

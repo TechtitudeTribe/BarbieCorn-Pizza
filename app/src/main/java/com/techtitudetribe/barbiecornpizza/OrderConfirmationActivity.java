@@ -3,6 +3,7 @@ package com.techtitudetribe.barbiecornpizza;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -43,12 +45,12 @@ public class OrderConfirmationActivity extends AppCompatActivity {
     private TextView itemNames;
     private TextView proceedToPay;
     private FirebaseAuth firebaseAuth;
-    private DatabaseReference cartRef, orderRef,userRef,adminRef;
+    private DatabaseReference cartRef, orderRef,userRef,adminRef,offerRef,contactRef;
     private String currentUser,address,key;
     private long orderItems=0,adminItems=0;
     private TextView orderConfirmationDate,orderConfirmationNumbers;
     private RadioGroup paymentMethod, orderType;
-    private String paymentMethodString="Pay via UPI", orderTypeString;
+    private String paymentMethodString="Pay via UPI", orderTypeString,sellerNumber;
     private TextView placeOrder;
     private String TAG ="main";
     private final int UPI_PAYMENT = 0;
@@ -57,6 +59,9 @@ public class OrderConfirmationActivity extends AppCompatActivity {
     private String sellerIdGlobal,isApplied="";
     private TextView applyFirstOffer, cancelFirstOrder;
     private RelativeLayout firstOfferLayout;
+    private double orderCondition=200;
+    private RelativeLayout distanceCondition;
+    private TextView cancelDistanceCondition, shopNumber;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +74,7 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         currentUser = firebaseAuth.getCurrentUser().getUid();
         cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
         orderRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyOrders");
+        contactRef = FirebaseDatabase.getInstance().getReference().child("NewShops");
         adminRef = FirebaseDatabase.getInstance().getReference().child("Sellers").child(sellerIdGlobal).child("MyOrders");
         userRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser);
 
@@ -76,7 +82,9 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         applyFirstOffer = (TextView) findViewById(R.id.apply_first_order_offer);
         cancelFirstOrder = (TextView) findViewById(R.id.close_first_order_offer);
 
-
+        shopNumber = (TextView) findViewById(R.id.seller_number_order_confirmation);
+        distanceCondition = (RelativeLayout) findViewById(R.id.distance_condition_card);
+        cancelDistanceCondition = (TextView) findViewById(R.id.close_distance_condition_offer);
         totalPrice = (TextView) findViewById(R.id.order_total_price);
         itemNames = (TextView) findViewById(R.id.order_confirmation_item_names);
         proceedToPay = (TextView) findViewById(R.id.order_confirmation_proceed_to_pay);
@@ -100,6 +108,58 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         sellerId.setText(getIntent().getStringExtra("sellerId"));
         shopName.setText(getIntent().getStringExtra("shopName"));
         key = getIntent().getStringExtra("key");
+
+        contactRef.child(getIntent().getStringExtra("shopName")).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+                    shopNumber.setText(snapshot.child("userContact").getValue().toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        cancelDistanceCondition.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                distanceCondition.setVisibility(View.GONE);
+            }
+        });
+
+        offerRef = FirebaseDatabase.getInstance().getReference().child("NewShops").child(getIntent().getStringExtra("shopName"));
+        SimpleDateFormat sdfOffer = new SimpleDateFormat("Hmm", Locale.getDefault());
+        String currentDateandTimeCondirion = sdfOffer.format(new Date());
+            offerRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists())
+                    {
+                        String os = snapshot.child("specialTimeOffers").getValue().toString();
+                        if (currentDateandTimeCondirion.equals("1343"))
+                        {
+                            if (os.equals("active"))
+                            {
+                                double discount = Integer.parseInt(actualPrice.getText().toString()) * 0.1;
+                                double finalAmount = Integer.parseInt(actualPrice.getText().toString()) - discount;
+                                actualPrice.setText(String.valueOf(finalAmount));
+                                totalPrice.setText(String.valueOf(finalAmount+Integer.parseInt(deliveryCharge.getText().toString())));
+                                Toast.makeText(OrderConfirmationActivity.this, "Offer Applied : Special Time Offer", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
 
         paymentMethod.clearCheck();
         orderType.clearCheck();
@@ -131,7 +191,15 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                 if (snapshot.hasChild("deliveryCharge"))
                 {
                     String dc = snapshot.child("deliveryCharge").getValue().toString();
-                    deliveryCharge.setText(dc);
+
+                    if (Double.parseDouble(actualPrice.getText().toString())>=350)
+                    {
+                        deliveryCharge.setText("00");
+                    }
+                    else
+                    {
+                        deliveryCharge.setText(dc);
+                    }
                     totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
                 }
                 else
@@ -194,21 +262,31 @@ public class OrderConfirmationActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
                 RadioButton radioButton = (RadioButton) radioGroup.findViewById(i);
                 orderTypeString = radioButton.getText().toString();
-                if(orderTypeString.equals("Dine In"))
+                if(orderTypeString.equals("Dine In")||orderTypeString.equals("Takeaway"))
                 {
                     deliveryCharge.setText("00");
-                    totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())));
+                    totalPrice.setText(actualPrice.getText().toString());
+                    orderCondition = 0;
+                    distanceCondition.setVisibility(View.GONE);
                 }
                 else
                 {
+                    orderCondition = 200;
                     cartRef.child(shopName.getText().toString()).addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
                             if (snapshot.hasChild("deliveryCharge"))
                             {
                                 String dc = snapshot.child("deliveryCharge").getValue().toString();
-                                deliveryCharge.setText(dc);
-                                totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
+                                if (Double.parseDouble(actualPrice.getText().toString())>=350)
+                                {
+                                    deliveryCharge.setText("00");
+                                }
+                                else
+                                {
+                                    deliveryCharge.setText(dc);
+                                }
+                                totalPrice.setText(String.valueOf(Double.parseDouble(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
                             }
                         }
 
@@ -217,6 +295,7 @@ public class OrderConfirmationActivity extends AppCompatActivity {
 
                         }
                     });
+                    distanceCondition.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -270,9 +349,10 @@ public class OrderConfirmationActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (!applyFirstOffer.getText().toString().equals("Applied"))
                 {
-                    double discount = Integer.parseInt(totalPrice.getText().toString()) * 0.1;
-                    double finalAmount = Integer.parseInt(totalPrice.getText().toString()) - discount;
-                    totalPrice.setText(String.valueOf(finalAmount));
+                    double discount = Integer.parseInt(actualPrice.getText().toString()) * 0.1;
+                    double finalAmount = Integer.parseInt(actualPrice.getText().toString()) - discount;
+                    actualPrice.setText(String.valueOf(finalAmount));
+                    totalPrice.setText(String.valueOf(finalAmount+Integer.parseInt(deliveryCharge.getText().toString())));
                     applyFirstOffer.setText("Applied");
                     isApplied = "Yes";
                 }
@@ -303,19 +383,33 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         placeOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                checkValidations(currentDate);
+
+                sellerNumber = shopNumber.getText().toString();
+                if (Double.parseDouble(totalPrice.getText().toString())>=orderCondition)
+                {
+                    checkValidations(currentDate);
+                }
+                else
+                {
+                    Toast.makeText(OrderConfirmationActivity.this, "Minimum Order is 200.\nAdd more items...", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
         proceedToPay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                sellerNumber = shopNumber.getText().toString();
                 if (TextUtils.isEmpty(paymentMethodString))
                 {
                     Toast.makeText(getApplicationContext(), "Select any Payment Method...", Toast.LENGTH_SHORT).show();
                 }else if (TextUtils.isEmpty(orderTypeString))
                 {
                     Toast.makeText(getApplicationContext(), "Select any Order Type...", Toast.LENGTH_SHORT).show();
+                }
+                else if (Integer.parseInt(totalPrice.getText().toString())<200)
+                {
+                    Toast.makeText(OrderConfirmationActivity.this, "Minimum Order is 200.\nAdd more items...", Toast.LENGTH_SHORT).show();
                 }
                 else
                 {
@@ -385,6 +479,7 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                 userRef.updateChildren(hashMap3);
             }
 
+
             HashMap hashMap = new HashMap();
             hashMap.put("itemNames",itemNames.getText().toString());
             hashMap.put("itemNumber",getIntent().getExtras().getString("itemNumbers"));
@@ -399,20 +494,12 @@ public class OrderConfirmationActivity extends AppCompatActivity {
             hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
 
 
-            orderRef.child("MyOrder"+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                @Override
-                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                    if (error!=null)
-                    {
-                        String message = error.getMessage().toString();
-                        Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                    }
-                    else
-                    {
-                        sendUserDetailsToAdmin(currentDate,currentDateandTime,currentTime);
-                    }
-                }
-            });
+            orderRef.child("MyOrder"+currentDateandTime).updateChildren(hashMap);
+            HashMap hashmap5 = new HashMap();
+            hashmap5.put("recentOrder","MyOrder"+currentDateandTime);
+
+            userRef.updateChildren(hashmap5);
+            sendUserDetailsToAdmin(currentDate,currentDateandTime,currentTime);
         }
     }
 
@@ -451,6 +538,7 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                 break;
         }
     }
+
     private void upiPaymentDataOperation(ArrayList<String> data) {
         if (isConnectionAvailable(OrderConfirmationActivity.this)) {
             String str = data.get(0);
@@ -507,20 +595,12 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                 hashMap.put("address",address);
                 hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
 
-                orderRef.child(currentDateAdmin).child("MyOrder"+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                    @Override
-                    public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                        if (error!=null)
-                        {
-                            String message = error.getMessage().toString();
-                            Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                        }
-                        else
-                        {
-                            sendUserDetailsToAdminPay(currentDate,currentDateandTime,currentTime);
-                        }
-                    }
-                });
+                orderRef.child(currentDateAdmin).child("MyOrder"+currentDateandTime).updateChildren(hashMap);
+                HashMap hashmap5 = new HashMap();
+                hashmap5.put("recentOrder","MyOrder"+currentDateandTime);
+
+                userRef.updateChildren(hashmap5);
+                sendUserDetailsToAdminPay(currentDate,currentDateandTime,currentTime);
                 Log.e("UPI", "payment successfull: "+approvalRefNo);
             }
             else if("Payment cancelled by user.".equals(paymentCancel)) {
@@ -571,48 +651,34 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         hashMap.put("customerNumber",userContact.getText().toString());
         hashMap.put("shopName",shopName.getText().toString());
 
-        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap);
+        Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
+        proceedToPay.setVisibility(View.GONE);
+        placeOrder.setVisibility(View.GONE);
+        placeProgressBar.setVisibility(View.GONE);
+        cartRef.child(shopName.getText().toString()).removeValue();
+        FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
-                if (error1!=null)
-                {
-                    String message = error1.getMessage().toString();
-                    Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                    placeProgressBar.setVisibility(View.GONE);
-                    placeOrder.setVisibility(View.VISIBLE);
-                    proceedToPay.setVisibility(View.GONE);
-                }
-                else
-                {
-                    Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
-                    proceedToPay.setVisibility(View.GONE);
-                    placeOrder.setVisibility(View.GONE);
-                    placeProgressBar.setVisibility(View.GONE);
-                    cartRef.child(shopName.getText().toString()).removeValue();
-                    FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            String usertoken=dataSnapshot.getValue(String.class);
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String usertoken=dataSnapshot.getValue(String.class);
 
-                            FcmNotificationSender notificationSender = new FcmNotificationSender(usertoken,"Alert","New Order is placed...",getApplicationContext(),OrderConfirmationActivity.this);
-                            notificationSender.SendNotifications();
-                        }
+                FcmNotificationSender notificationSender = new FcmNotificationSender(usertoken,"Alert","New Order is placed...",getApplicationContext(),OrderConfirmationActivity.this);
+                notificationSender.SendNotifications();
+            }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                        }
-                    });
-                }
             }
         });
+        //SmsManager.getDefault().sendTextMessage(sellerNumber, "BBC", "New Order is placed...", null,null);
+        sendUserToMainActivity();
     }
 
     private void sendUserDetailsToAdminPay(String currentDate, String currentDateandTime, String currentTime)
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMd", Locale.getDefault());
         String currentDateAdmin = sdf.format(new Date());
-
 
         HashMap hashMap = new HashMap();
         hashMap.put("itemNames",itemNames.getText().toString());
@@ -631,42 +697,36 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         hashMap.put("customerNumber",userContact.getText().toString());
         hashMap.put("shopName",shopName.getText().toString());
 
-        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap);
+        Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
+        proceedToPay.setVisibility(View.GONE);
+        placeOrder.setVisibility(View.GONE);
+        placeProgressBar.setVisibility(View.GONE);
+        cartRef.child(shopName.getText().toString()).removeValue();
+        FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
-                if (error1!=null)
-                {
-                    String message = error1.getMessage().toString();
-                    Toast.makeText(OrderConfirmationActivity.this, "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                    placeProgressBar.setVisibility(View.GONE);
-                    proceedToPay.setVisibility(View.VISIBLE);
-                }
-                else
-                {
-                    Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
-                    proceedToPay.setVisibility(View.GONE);
-                    placeOrder.setVisibility(View.GONE);
-                    placeProgressBar.setVisibility(View.GONE);
-                    cartRef.child(shopName.getText().toString()).removeValue();
-                    FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            String usertoken=dataSnapshot.getValue(String.class);
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String usertoken=dataSnapshot.getValue(String.class);
 
-                            FcmNotificationSender notificationSender = new FcmNotificationSender(usertoken,"Alert","New Order is placed...",getApplicationContext(),OrderConfirmationActivity.this);
-                            notificationSender.SendNotifications();
-                        }
+                FcmNotificationSender notificationSender = new FcmNotificationSender(usertoken,"Alert","New Order is placed...",getApplicationContext(),OrderConfirmationActivity.this);
+                notificationSender.SendNotifications();
+            }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                        }
-                    });
-                }
             }
         });
+        //SmsManager.getDefault().sendTextMessage(sellerNumber, "BBC", "New Order is placed...", null,null);
+        sendUserToMainActivity();
     }
 
+    private void sendUserToMainActivity() {
+        Intent mainIntent = new Intent(OrderConfirmationActivity.this,MainActivity.class);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(mainIntent);
+        finish();
+    }
     /*public void sendNotifications(String usertoken, String title, String message) {
         Data data = new Data(title, message);
         NotificationSender sender = new NotificationSender(data, usertoken);

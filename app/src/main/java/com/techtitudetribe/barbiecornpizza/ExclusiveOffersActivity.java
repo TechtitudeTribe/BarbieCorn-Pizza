@@ -9,10 +9,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -41,29 +45,27 @@ import java.util.Locale;
 public class ExclusiveOffersActivity extends AppCompatActivity {
 
     private FirebaseAuth firebaseAuth;
-    private RecyclerView menuListView1,menuListView2;
-    private DatabaseReference menuRef, shopRef, cartRef;
-    private ProgressBar progressBarOne,progressBarTwo,shopProgressBar,cartProgressBar;
+    private RecyclerView menuListView1,menuListView2,addressList;
+    private DatabaseReference menuRef,addRef;
+    private ProgressBar progressBarOne,progressBarTwo, addProgressBar;
     private ImageView back;
-    private RecyclerView shopDetailsList;
-    private RelativeLayout bothPizza;
-    private LinearLayout linearLayout;
-    private FrameLayout frameLayoutPizza1;
-    private ImageView pizzaOneImage, pizzaTwoImage, pizzaOneDelete, pizzaTwoDelete;
-    private TextView pizzaOnePrice, pizzaTwoPrice, pizzaOneName, pizzaTwoName;
-    private CardView partitionOne, partitionTwo;
-    private FrameLayout frameLayoutOne, frameLayoutTwo;
-    private String shopKey="", priceCondition="", pizzaSize="Medium",currentUser, userId,shopName="Yummy";
-    private int positionOne = -1, positionTwo = -1;
+    private FrameLayout frameLayoutOne, frameLayoutTwo,addressFrame;
+    private String priceCondition="", pizzaSize="Medium",currentUser, userId;
+    private int positionOne = -1, positionTwo = -1, positionAdd = -1;
     private CardView mediumLayout, largeLayout;
-    private TextView mediumSize, largeSize;
-    private TextView addToCart, payablePrice, shopItemNamesText;
-    private long cartItems=0,shopItems=0;
+    private TextView mediumSize, largeSize, oneText, twoText, one, two;
+    private TextView payablePrice;
     private Boolean itemAvailable = false;
-    private RelativeLayout footer;
     private ImageView blockOne;
-    private CardView blockTwo;
-    private String offerStatus;
+    private CardView blockTwo, oneLayout, twoLayout;
+    private String offerStatus="active",shopAddress,key,address;
+    private LinearLayout oneLinearLayout, twoLinearLayout;
+    private View oneView, twoView;
+    private TextView placeOrder, noAddress,sellerId;
+    private RelativeLayout addressLayout;
+    private Boolean isOpen = false;
+    private EditText customAddress;
+    private TextView customAddressButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,59 +74,80 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
-        menuRef = FirebaseDatabase.getInstance().getReference().child("Shops").child(getIntent().getStringExtra("shopAddress"));
-        shopRef = FirebaseDatabase.getInstance().getReference().child("Shops").child(getIntent().getStringExtra("shopAddress"));
+        addRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyAddresses");
 
-        shopDetailsList = (RecyclerView) findViewById(R.id.offers_shop_details_list);
-        LinearLayoutManager linearLayoutManager1 = new LinearLayoutManager(getApplicationContext());
-        linearLayoutManager1.setReverseLayout(false);
-        linearLayoutManager1.setStackFromEnd(false);
-        shopDetailsList.setLayoutManager(linearLayoutManager1);
+        shopAddress = getIntent().getStringExtra("key");
+        menuRef = FirebaseDatabase.getInstance().getReference().child("NewShops").child(shopAddress);
 
-        linearLayout = (LinearLayout) findViewById(R.id.offers_shop_details_linear_layout);
-        frameLayoutPizza1 = (FrameLayout) findViewById(R.id.everyday_offers_pizza_frame_layout1);
-        bothPizza = (RelativeLayout) findViewById(R.id.both_pizza_relative_layout);
-        back = (ImageView) findViewById(R.id.everyday_offers_back);
+        back = (ImageView) findViewById(R.id.exclusive_offers_back);
 
+        placeOrder = (TextView) findViewById(R.id.exclusive_offers_place_order);
         blockOne = (ImageView) findViewById(R.id.block_screen_one);
         blockTwo = (CardView) findViewById(R.id.block_screen_two);
-        footer = (RelativeLayout) findViewById(R.id.exclusive_offers_footer);
-        shopItemNamesText = (TextView) findViewById(R.id.shop_name_item_offers_text);
         mediumLayout = (CardView) findViewById(R.id.offer_pizza_size_medium_layout);
         mediumSize = (TextView) findViewById(R.id.offer_pizza_size_medium);
         largeLayout = (CardView) findViewById(R.id.offer_pizza_size_large_layout);
         largeSize = (TextView) findViewById(R.id.offer_pizza_size_large);
         frameLayoutOne = (FrameLayout) findViewById(R.id.everyday_offers_pizza_frame_layout1);
         frameLayoutTwo = (FrameLayout) findViewById(R.id.everyday_offers_pizza_frame_layout2);
-        partitionOne = (CardView) findViewById(R.id.offers_partition_one);
-        partitionTwo = (CardView) findViewById(R.id.offers_partition_two);
-        pizzaOneDelete = (ImageView) findViewById(R.id.everyday_offers_pizza_one_delete);
-        pizzaTwoDelete = (ImageView) findViewById(R.id.everyday_offers_pizza_two_delete);
-        pizzaOneImage = (ImageView) findViewById(R.id.everyday_offers_pizza_one);
-        pizzaTwoImage = (ImageView) findViewById(R.id.everyday_offers_pizza_two);
-        pizzaOneName = (TextView) findViewById(R.id.everyday_offers_pizza_one_name);
-        pizzaTwoName = (TextView) findViewById(R.id.everyday_offers_pizza_two_name);
-        pizzaOnePrice = (TextView) findViewById(R.id.everyday_offers_pizza_one_price);
-        pizzaTwoPrice = (TextView) findViewById(R.id.everyday_offers_pizza_two_price);
 
-        addToCart = (TextView) findViewById(R.id.offers_add_cart);
+        customAddressButton = (TextView) findViewById(R.id.custom_address_exclusive_offer_button);
+        customAddress = (EditText) findViewById(R.id.custom_address_exclusive_offer);
+
+        oneText = (TextView) findViewById(R.id.exclusive_offers_pizza_one_text);
+        twoText = (TextView) findViewById(R.id.exclusive_offers_pizza_two_text);
+        oneLayout = (CardView) findViewById(R.id.exclusive_offers_pizza_one_card);
+        twoLayout = (CardView) findViewById(R.id.exclusive_offers_pizza_two_card);
+        one = (TextView) findViewById(R.id.exclusive_offers_pizza_one);
+        two = (TextView) findViewById(R.id.exclusive_offers_pizza_two);
+
+        oneLinearLayout = (LinearLayout) findViewById(R.id.exclusive_offers_pizza_one_linear);
+        twoLinearLayout = (LinearLayout) findViewById(R.id.exclusive_offers_pizza_two_linear);
+
+
+        sellerId = (TextView) findViewById(R.id.exclusive_offer_seller_id);
+        oneView = (View) findViewById(R.id.exclusive_offers_pizza_one_view);
+        twoView = (View) findViewById(R.id.exclusive_offers_pizza_two_view);
+
         payablePrice = (TextView) findViewById(R.id.exclusive_offers_total_cost);
-        cartProgressBar = (ProgressBar) findViewById(R.id.offers_cart_progress_bar);
 
         menuListView1 = (RecyclerView) findViewById(R.id.everyday_offers_pizza_layout1);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setReverseLayout(true);
-        linearLayoutManager.setStackFromEnd(true);
-        linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        linearLayoutManager.setReverseLayout(false);
+        linearLayoutManager.setStackFromEnd(false);
         menuListView1.setLayoutManager(linearLayoutManager);
 
         menuListView2 = (RecyclerView) findViewById(R.id.everyday_offers_pizza_layout2);
         LinearLayoutManager linearLayoutManager2 = new LinearLayoutManager(this);
-        linearLayoutManager2.setReverseLayout(true);
-        linearLayoutManager2.setStackFromEnd(true);
-        linearLayoutManager2.setOrientation(LinearLayoutManager.HORIZONTAL);
+        linearLayoutManager2.setReverseLayout(false);
+        linearLayoutManager2.setStackFromEnd(false);
         menuListView2.setLayoutManager(linearLayoutManager2);
+
+        noAddress = (TextView) findViewById(R.id.exclusive_offer_no_address_found);
+        addressFrame = (FrameLayout) findViewById(R.id.exclusive_offer_address_list_frame);
+        addressLayout = (RelativeLayout) findViewById(R.id.exclusive_offer_address_list_layout);
+        addProgressBar = (ProgressBar) findViewById(R.id.exclusive_offer_address_list_progress_bar);
+
+        addressList = (RecyclerView) findViewById(R.id.exclusive_offer_address_list);
+        LinearLayoutManager linearLayoutManager4 = new LinearLayoutManager(this);
+        linearLayoutManager4.setReverseLayout(false);
+        linearLayoutManager4.setStackFromEnd(false);
+        addressList.setLayoutManager(linearLayoutManager4);
+
+        customAddressButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (TextUtils.isEmpty(customAddress.getText().toString().trim()))
+                {
+                    Toast.makeText(ExclusiveOffersActivity.this, "Please fill your address details", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    address = customAddress.getText().toString().trim();
+                    customAddressButton.setText("Saved!");
+                }
+            }
+        });
 
         mediumLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,18 +159,47 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
                 if (!pizzaSize.equals("Medium"))
                 {
                     pizzaSize = "Medium";
-                    pizzaOneImage.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.medium_pizza));
-                    pizzaOnePrice.setText("000");
-                    pizzaOneName.setText("Pizza Name 1");
-                    pizzaTwoImage.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.medium_pizza));
-                    pizzaTwoPrice.setText("000");
-                    pizzaTwoName.setText("Pizza Name 2");
+                    positionOne = -1;
+                    positionTwo = -1;
+                    one.setText("Pizza Name");
+                    two.setText("Pizza Name");
+                    one.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    two.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    oneLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    twoLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    oneText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    twoText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    oneView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    twoView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
                     frameLayoutOne.setVisibility(View.VISIBLE);
                     frameLayoutTwo.setVisibility(View.GONE);
-                    displayMenuItems1(shopKey, offerStatus);
-                    displayMenuItems2(shopKey,offerStatus);
+                    displayMenuItems1(offerStatus);
+                    displayMenuItems2(offerStatus);
                     payablePrice.setText("000");
                 }
+            }
+        });
+
+        addRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+                    noAddress.setVisibility(View.GONE);
+                    addressFrame.setVisibility(View.VISIBLE);
+                    displayExclusiveOfferAddressList();
+                }
+                else
+                {
+                    noAddress.setVisibility(View.VISIBLE);
+                    addressFrame.setVisibility(View.INVISIBLE);
+                    addProgressBar.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
 
@@ -160,66 +212,86 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
                 largeSize.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_red));
                 if (!pizzaSize.equals("Large"))
                 {
-                    pizzaOneImage.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.medium_pizza));
-                    pizzaOnePrice.setText("000");
-                    pizzaOneName.setText("Pizza Name 1");
-                    pizzaTwoImage.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.medium_pizza));
-                    pizzaTwoPrice.setText("000");
-                    pizzaTwoName.setText("Pizza Name 2");
                     pizzaSize = "Large";
+                    positionOne = -1;
+                    positionTwo = -1;
+                    one.setText("Pizza Name");
+                    two.setText("Pizza Name");
+                    one.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    two.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    oneLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    twoLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    oneText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    twoText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    oneView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    twoView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
                     frameLayoutOne.setVisibility(View.VISIBLE);
                     frameLayoutTwo.setVisibility(View.GONE);
-                    displayMenuItems1(shopKey, offerStatus);
-                    displayMenuItems2(shopKey, offerStatus);
+                    displayMenuItems1(offerStatus);
+                    displayMenuItems2(offerStatus);
                     payablePrice.setText("000");
                 }
             }
         });
 
-        partitionOne.setOnClickListener(new View.OnClickListener() {
+        menuRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onClick(View view) {
-                frameLayoutOne.setVisibility(View.VISIBLE);
-                frameLayoutTwo.setVisibility(View.GONE);
-                displayMenuItems1(shopKey, offerStatus);
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+                    String si = snapshot.child("userId").getValue().toString();
+                    sellerId.setText(si);
+                }
             }
-        });
 
-        partitionTwo.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                if (!priceCondition.equals(""))
-                {
-                    frameLayoutOne.setVisibility(View.GONE);
-                    frameLayoutTwo.setVisibility(View.VISIBLE);
-                    displayMenuItems2(shopKey, offerStatus);
-                }
-                else
-                {
-                    Toast.makeText(ExclusiveOffersActivity.this, getResources().getString(R.string.selectYourFirstPizza), Toast.LENGTH_SHORT).show();
-                }
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
 
         progressBarOne = (ProgressBar) findViewById(R.id.everyday_offers_progress_bar1);
         progressBarTwo = (ProgressBar) findViewById(R.id.everyday_offers_progress_bar2);
-        shopProgressBar = (ProgressBar) findViewById(R.id.offers_shop_details_list_progress_bar);
 
-        pizzaOneDelete.setOnClickListener(new View.OnClickListener() {
+        oneLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pizzaOneImage.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.medium_pizza));
-                pizzaOnePrice.setText("000");
-                pizzaOneName.setText("Pizza Name 1");
+                one.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                two.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                oneLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                twoLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                oneText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                twoText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                oneView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                twoView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                frameLayoutOne.setVisibility(View.VISIBLE);
+                frameLayoutTwo.setVisibility(View.GONE);
+                displayMenuItems1(offerStatus);
             }
         });
 
-        pizzaTwoDelete.setOnClickListener(new View.OnClickListener() {
+        twoLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pizzaTwoImage.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.medium_pizza));
-                pizzaTwoPrice.setText("000");
-                pizzaTwoName.setText("Pizza Name 2");
+                if (!one.getText().toString().equals("Pizza Name"))
+                {
+                    one.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    two.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    oneLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    twoLinearLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    oneText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    twoText.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    oneView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                    twoView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                    frameLayoutOne.setVisibility(View.GONE);
+                    frameLayoutTwo.setVisibility(View.VISIBLE);
+                    displayMenuItems2(offerStatus);
+                }
+                else
+                {
+                    Toast.makeText(ExclusiveOffersActivity.this, getResources().getString(R.string.selectYourFirstPizza), Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
 
@@ -230,305 +302,152 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
             }
         });
 
-        addToCart.setOnClickListener(new View.OnClickListener() {
+        Animation open = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.order_track_open);
+        Animation close = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.order_track_close);
+
+        placeOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (TextUtils.equals(pizzaOneName.getText().toString(),"Pizza Name 1"))
+                if (one.getText().toString().equals("Pizza Name"))
                 {
                     Toast.makeText(ExclusiveOffersActivity.this, getResources().getString(R.string.selectYourFirstPizza), Toast.LENGTH_SHORT).show();
                 }
-                else if (TextUtils.equals(pizzaTwoName.getText().toString(),"Pizza Name 2"))
+                else
+                if (two.getText().toString().equals("Pizza Name"))
                 {
                     Toast.makeText(ExclusiveOffersActivity.this, getResources().getString(R.string.selectYourSecondPizza), Toast.LENGTH_SHORT).show();
                 }
                 else
                 {
-                    addToCart.setVisibility(View.GONE);
-                    cartProgressBar.setVisibility(View.VISIBLE);
-
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
-                    String currentDateandTime = sdf.format(new Date());
-
-                    cartRef.child(shopName).child("CartItems").addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            for (DataSnapshot ds : snapshot.getChildren())
-                            {
-
-                                String in = ds.child("itemName").getValue().toString();
-                                if ((pizzaOneName.getText().toString()+" & "+pizzaTwoName.getText().toString()).equals(in))
-                                {
-                                    cartRef = ds.getRef();
-                                    itemAvailable = true;
-                                }
-
-                            }
-                            if (itemAvailable)
-                            {
-                                HashMap hashMap = new HashMap();
-                                hashMap.put("itemPrice",payablePrice.getText().toString());
-                                hashMap.put("itemCustomizedPrice",payablePrice.getText().toString());
-                                hashMap.put("itemDescription","Offer Applied : Buy One Get One Free"+"\nSize : "+pizzaSize);
-
-                                cartRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                    @Override
-                                    public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                        if (error!=null)
-                                        {
-                                            String message = error.getMessage();
-                                            Toast.makeText(getApplicationContext(),"Error Occurred : "+message,Toast.LENGTH_SHORT).show();
-                                            cartProgressBar.setVisibility(View.GONE);
-                                            addToCart.setVisibility(View.VISIBLE);
-                                        }
-                                        else
-                                        {
-                                            Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                            addToCart.setVisibility(View.GONE);
-                                            cartProgressBar.setVisibility(View.GONE);
-                                        }
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                HashMap hashMap1 = new HashMap();
-                                hashMap1.put("count",shopItems+1);
-                                hashMap1.put("itemNames",shopItemNamesText.getText().toString()+pizzaOneName.getText().toString()+" & "+pizzaTwoName.getText().toString());
-                                hashMap1.put("shopName",shopName);
-                                hashMap1.put("sellerId",userId);
-
-                                cartRef.child(shopName).updateChildren(hashMap1, new DatabaseReference.CompletionListener() {
-                                    @Override
-                                    public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
-                                        if (error1!=null)
-                                        {
-                                            String message = error1.getMessage();
-                                            Toast.makeText(getApplicationContext(),"Error Occurred : "+message,Toast.LENGTH_SHORT).show();
-                                            cartProgressBar.setVisibility(View.GONE);
-                                            //viewCart.setVisibility(View.GONE);
-                                            addToCart.setVisibility(View.VISIBLE);
-                                        }
-                                        else
-                                        {
-                                            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
-                                            String currentDateandTime = sdf.format(new Date());
-
-                                            HashMap hashMap = new HashMap();
-                                            hashMap.put("count",cartItems+1);
-                                            hashMap.put("itemName",pizzaOneName.getText().toString()+" & "+pizzaTwoName.getText().toString());
-                                            hashMap.put("itemPrice",payablePrice.getText().toString());
-                                            hashMap.put("itemCustomizedPrice",payablePrice.getText().toString());
-                                            hashMap.put("itemDescription","Offer Applied : Buy One Get One Free"+"\nSize : "+pizzaSize);
-                                            hashMap.put("itemImage","https://firebasestorage.googleapis.com/v0/b/barbiecorn-pizza.appspot.com/o/Burger%2FFarmhouse.png?alt=media&token=4fe3612d-862a-4c8d-b601-69974820861c");
-                                            hashMap.put("itemQuantity","1");
-
-                                            cartRef.child(shopName).child("CartItems").child("CartItem"+currentDateandTime)
-                                                    .updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                                @Override
-                                                public void onComplete(@Nullable DatabaseError error2, @NonNull DatabaseReference ref) {
-                                                    if (error2!=null)
-                                                    {
-                                                        String message = error2.getMessage();
-                                                        Toast.makeText(getApplicationContext(),"Error Occurred : "+message,Toast.LENGTH_SHORT).show();
-                                                        cartProgressBar.setVisibility(View.GONE);
-                                                        //viewCart.setVisibility(View.GONE);
-                                                        addToCart.setVisibility(View.VISIBLE);
-                                                    }
-                                                    else
-                                                    {
-                                                        Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                                        addToCart.setVisibility(View.GONE);
-                                                        cartProgressBar.setVisibility(View.GONE);
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
-                            }
+                    if (placeOrder.getText().toString().equals("Select an Address")||placeOrder.getText().toString().equals("एक पता चुनें"))
+                    {
+                        if(isOpen)
+                        {
+                            addressLayout.startAnimation(close);
+                            addressLayout.setVisibility(View.GONE);
+                            isOpen=false;
                         }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-
+                        else
+                        {
+                            addressLayout.startAnimation(open);
+                            addressLayout.setVisibility(View.VISIBLE);
+                            isOpen=true;
                         }
-                    });
-
+                    }
+                    else
+                    {
+                        if (TextUtils.isEmpty(address))
+                        {
+                            Toast.makeText(ExclusiveOffersActivity.this, "Please choose an address", Toast.LENGTH_SHORT).show();
+                        }
+                        else
+                        {
+                            Intent intent = new Intent(ExclusiveOffersActivity.this,OrderConfirmationActivity.class);
+                            intent.putExtra("itemName",one.getText().toString()+" and "+two.getText().toString());
+                            intent.putExtra("totalPrice",payablePrice.getText().toString());
+                            intent.putExtra("itemDescription","Offer Applied : Exclusive Offers"+"\nSize : "+pizzaSize);
+                            intent.putExtra("address",address);
+                            intent.putExtra("sellerId",sellerId.getText().toString());
+                            intent.putExtra("shopName",shopAddress);
+                            intent.putExtra("itemNumbers","1");
+                            intent.putExtra("key",key);
+                            startActivity(intent);
+                        }
+                    }
 
                 }
+
             }
         });
 
-        displayShopList();
+        displayMenuItems1(offerStatus);
     }
 
-    private void displayShopList() {
-        Query sort = shopRef.orderByChild("count");
-        FirebaseRecyclerAdapter<ShopDetailsAdapter, ShopDetailsViewHolder> frc =
-                new FirebaseRecyclerAdapter<ShopDetailsAdapter, ShopDetailsViewHolder>(
-                        ShopDetailsAdapter.class,
-                        R.layout.offers_shop_details_layout,
-                        ShopDetailsViewHolder.class,
+    private void displayExclusiveOfferAddressList()
+    {
+        Query sort = addRef.orderByChild("count");
+        FirebaseRecyclerAdapter<MyAddressAdapter, ExclusiveOfferAddressViewHolder> fra =
+                new FirebaseRecyclerAdapter<MyAddressAdapter, ExclusiveOfferAddressViewHolder>(
+                        MyAddressAdapter.class,
+                        R.layout.cart_address_layout,
+                        ExclusiveOfferAddressViewHolder.class,
                         sort
                 ) {
                     @Override
-                    protected void populateViewHolder(ShopDetailsViewHolder shopDetailsViewHolder, ShopDetailsAdapter shopDetailsAdapter, int i) {
+                    protected void populateViewHolder(ExclusiveOfferAddressViewHolder cartAddressViewHolder, MyAddressAdapter myAddressAdapter, int i) {
 
+                        TextView textView = (TextView) cartAddressViewHolder.mView.findViewById(R.id.cart_address_layout_text);
 
-                        //Animation leftAnimation = AnimationUtils.loadAnimation(getActivity(),R.anim.left_animation);
-                        //Animation bottomAnimation = AnimationUtils.loadAnimation(getActivity(),R.anim.bottom_animation);
-                        //Animation open = AnimationUtils.loadAnimation(getActivity(),R.anim.order_track_open);
-                        TextView name = (TextView) shopDetailsViewHolder.mView.findViewById(R.id.offers_shop_details_name);
-                        //TextView status = (TextView) shopDetailsViewHolder.mView.findViewById(R.id.shop_details_status);
-                        View relativeLayout = (View) shopDetailsViewHolder.mView.findViewById(R.id.offers_shop_details_relative_layout);
+                        cartAddressViewHolder.setAddress(myAddressAdapter.getAddress());
 
-                        shopDetailsViewHolder.setShopName(shopDetailsAdapter.getShopName());
-                        userId = shopDetailsAdapter.getUserId();
-                        shopDetailsViewHolder.setShopFrontImage(shopDetailsAdapter.getShopFrontImage(),getApplicationContext());
-                        String key = getRef(i).getKey();
-                        shopKey = key;
-                        shopProgressBar.setVisibility(View.GONE);
-
-
-                        switch (i%4)
-                        {
-                            case 0 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
-                                break;
-                            case 1 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
-                                break;
-                            case 2 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
-                                break;
-                            case 3 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
-                                break;
-                        }
-
-                        shopDetailsViewHolder.mView.setOnClickListener(new View.OnClickListener() {
+                        addProgressBar.setVisibility(View.GONE);
+                        cartAddressViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                offerStatus = shopDetailsAdapter.getExclusiveOffersStatus();
-                                linearLayout.setVisibility(View.GONE);
-                                bothPizza.setVisibility(View.VISIBLE);
-                                shopName = shopDetailsAdapter.getShopName();
-                                frameLayoutPizza1.setVisibility(View.VISIBLE);
-                                if (offerStatus.equals("active"))
-                                {
-                                    blockOne.setVisibility(View.GONE);
-                                    blockTwo.setVisibility(View.GONE);
-                                }
-                                else
-                                {
-                                    blockOne.setVisibility(View.VISIBLE);
-                                    blockTwo.setVisibility(View.VISIBLE);
-                                }
-                                displayMenuItems1(key,offerStatus);
-                                footer.setVisibility(View.VISIBLE);
+                                positionAdd = i;
+                                notifyDataSetChanged();
+                                address = myAddressAdapter.getAddress();
+                                placeOrder.setText(getResources().getString(R.string.placeOrder));
                             }
+
                         });
 
-                        cartRef.child(shopName).addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if (snapshot.hasChild("itemNames"))
-                                {
-                                    String shopItemNames = snapshot.child("itemNames").getValue().toString()+",";
-                                    shopItemNamesText.setText(shopItemNames);
-                                }
-                                else
-                                {
-                                    shopItemNamesText.setText("");
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
-
-                        cartRef.child(shopName).child("CartItems").addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if (snapshot.exists())
-                                {
-                                    cartItems = snapshot.getChildrenCount();
-                                }
-                                else
-                                {
-                                    cartItems=0;
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
-                        cartRef.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                if (snapshot.exists())
-                                {
-                                    shopItems = snapshot.getChildrenCount();
-                                }
-                                else
-                                {
-                                    shopItems=0;
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-
-                            }
-                        });
+                        if (positionAdd==i)
+                        {
+                            textView.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                            textView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.smoky_black));
+                        }
+                        else
+                        {
+                            textView.setTextColor(ContextCompat.getColor(getApplicationContext(),R.color.title_background));
+                            textView.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.white));
+                        }
                     }
                 };
-        shopDetailsList.setAdapter(frc);
+        addressList.setAdapter(fra);
     }
 
-    private void displayMenuItems1(String key, String offerStatus) {
-        Query sorting = menuRef.child(key).child("MenuItem").child("VegPizza").orderByChild("count");
+    private void displayMenuItems1(String offerStatus) {
+        Query sorting = menuRef.child("MenuItem").child("VegPizza").orderByChild("count");
         FirebaseRecyclerAdapter<MenuItemAdapter, MenuItemViewHolder> firebaseRecyclerAdapter =
                 new FirebaseRecyclerAdapter<MenuItemAdapter, MenuItemViewHolder>(
                         MenuItemAdapter.class,
-                        R.layout.menu_item_layout,
+                        R.layout.everyday_offer_layout,
                         MenuItemViewHolder.class,
                         sorting
                 ) {
                     @Override
                     protected void populateViewHolder(MenuItemViewHolder menuItemViewHolder, MenuItemAdapter menuItemAdapter, int i) {
 
-                        RelativeLayout relativeLayout = (RelativeLayout) menuItemViewHolder.mView.findViewById(R.id.menu_item_relative_layout);
-                        ImageView cart = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_cart);
-                        ImageView explore = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_add);
-                        TextView itemPriceOffer = (TextView) menuItemViewHolder.mView.findViewById(R.id.menu_item_price);
-                        ProgressBar cartProgress = (ProgressBar) menuItemViewHolder.mView.findViewById(R.id.menu_item_progress_bar);
-                        ProgressBar favProgress = (ProgressBar) menuItemViewHolder.mView.findViewById(R.id.menu_item_fav_progress_bar);
-                        String menuKey = getRef(i).getKey();
+                        View view = (View) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_view);
+                        TextView list = (TextView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_add_list);
+                        TextView bottom = (TextView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_description);
+                        CardView listLayout = (CardView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_add_layout);
+                        TextView price = (TextView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_item_price);
 
-                        switch (i%4)
+                        switch (i%3)
                         {
-                            case 0 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                            case 0 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
                                 break;
-                            case 1 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                            case 1 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
                                 break;
-                            case 2 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                            case 2 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
                                 break;
-                            case 3 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                            case 3 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
                                 break;
                         }
 
                         if (offerStatus.equals("active"))
                         {
-                            explore.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    Picasso.with(getApplicationContext()).load(menuItemAdapter.getImage()).into(pizzaOneImage);
-                                    pizzaOneName.setText(menuItemAdapter.getName());
-                                    pizzaOnePrice.setText(itemPriceOffer.getText().toString());
-                                    priceCondition = itemPriceOffer.getText().toString();
-                                }
-                            });
+
                             blockOne.setVisibility(View.GONE);
                             blockTwo.setVisibility(View.GONE);
                         }
@@ -538,22 +457,58 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
                             blockTwo.setVisibility(View.VISIBLE);
                         }
 
+                        listLayout.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                positionOne = i;
+                                key = getRef(i).getKey();
+                                notifyDataSetChanged();
+                                one.setText(menuItemAdapter.getName());
+                                two.setText("Pizza Name");
+                                priceCondition = price.getText().toString();
+                                positionTwo = -1;
+                                payablePrice.setText(price.getText().toString());
 
+                            }
+                        });
 
-                        if (pizzaSize.equals("Medium"))
+                        if (Integer.parseInt(menuItemAdapter.getMedium())>=350)
                         {
-                            menuItemViewHolder.setName(menuItemAdapter.getName());
-                            menuItemViewHolder.setImage(getApplicationContext(),menuItemAdapter.getImage());
-                            menuItemViewHolder.setMedium(menuItemAdapter.getMedium());
-                            progressBarOne.setVisibility(View.GONE);
+                            menuItemViewHolder.mView.setVisibility(View.VISIBLE);
+                            menuItemViewHolder.mView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                            if (pizzaSize.equals("Medium"))
+                            {
+                                menuItemViewHolder.setName(menuItemAdapter.getName());
+                                menuItemViewHolder.setImage(menuItemAdapter.getImage(),getApplicationContext());
+                                menuItemViewHolder.setMedium(menuItemAdapter.getMedium());
+                                menuItemViewHolder.setDescription(menuItemAdapter.getDescription());
+                                progressBarOne.setVisibility(View.GONE);
+                            }
+                            else
+                            {
+                                menuItemViewHolder.setMedium(menuItemAdapter.getLarge());
+                                menuItemViewHolder.setName(menuItemAdapter.getName());
+                                menuItemViewHolder.setImage(menuItemAdapter.getImage(),getApplicationContext());
+                                menuItemViewHolder.setDescription(menuItemAdapter.getDescription());
+                                progressBarOne.setVisibility(View.GONE);
+                            }
                         }
                         else
                         {
-                            menuItemViewHolder.setMedium(menuItemAdapter.getLarge());
-                            menuItemViewHolder.setName(menuItemAdapter.getName());
-                            menuItemViewHolder.setImage(getApplicationContext(),menuItemAdapter.getImage());
+                            menuItemViewHolder.mView.setVisibility(View.GONE);
+                            menuItemViewHolder.mView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
                             progressBarOne.setVisibility(View.GONE);
                         }
+
+                        if (positionOne==i)
+                        {
+                            listLayout.setVisibility(View.INVISIBLE);
+                        }
+                        else
+                        {
+                            listLayout.setVisibility(View.VISIBLE);
+                        }
+
 
 
                     }
@@ -561,47 +516,55 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
         menuListView1.setAdapter(firebaseRecyclerAdapter);
     }
 
-    private void displayMenuItems2(String key, String offerStatus) {
-        Query sorting = menuRef.child(key).child("MenuItem").child("VegPizza").orderByChild("count");
+    private void displayMenuItems2(String offerStatus) {
+        Query sorting = menuRef.child("MenuItem").child("VegPizza").orderByChild("count");
         FirebaseRecyclerAdapter<MenuItemAdapter, MenuItemViewHolder> firebaseRecyclerAdapter =
                 new FirebaseRecyclerAdapter<MenuItemAdapter, MenuItemViewHolder>(
                         MenuItemAdapter.class,
-                        R.layout.menu_item_layout,
+                        R.layout.everyday_offer_layout,
                         MenuItemViewHolder.class,
                         sorting
                 ) {
                     @Override
                     protected void populateViewHolder(MenuItemViewHolder menuItemViewHolder, MenuItemAdapter menuItemAdapter, int i) {
 
-                        RelativeLayout relativeLayout = (RelativeLayout) menuItemViewHolder.mView.findViewById(R.id.menu_item_relative_layout);
-                        ImageView cart = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_cart);
-                        ImageView explore = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_add);
-                        TextView itemPriceOffer = (TextView) menuItemViewHolder.mView.findViewById(R.id.menu_item_price);
-                        ProgressBar cartProgress = (ProgressBar) menuItemViewHolder.mView.findViewById(R.id.menu_item_progress_bar);
-                        ProgressBar favProgress = (ProgressBar) menuItemViewHolder.mView.findViewById(R.id.menu_item_fav_progress_bar);
-                        String menuKey = getRef(i).getKey();
+                        View view = (View) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_view);
+                        TextView list = (TextView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_add_list);
+                        TextView bottom = (TextView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_description);
+                        CardView listLayout = (CardView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_add_layout);
+                        TextView price = (TextView) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_item_price);
+                        LinearLayout linearLayout = (LinearLayout) menuItemViewHolder.mView.findViewById(R.id.everyday_special_offer_price_layout);
 
-                        switch (i%4)
+                        switch (i%3)
                         {
-                            case 0 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                            case 0 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
                                 break;
-                            case 1 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                            case 1 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
                                 break;
-                            case 2 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                            case 2 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
                                 break;
-                            case 3 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                            case 3 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
                                 break;
                         }
 
+                        linearLayout.setVisibility(View.GONE);
                         if (offerStatus.equals("active"))
                         {
-                            explore.setOnClickListener(new View.OnClickListener() {
+                            listLayout.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
-                                    Picasso.with(getApplicationContext()).load(menuItemAdapter.getImage()).into(pizzaTwoImage);
-                                    pizzaTwoName.setText(menuItemAdapter.getName());
-                                    pizzaTwoPrice.setText(itemPriceOffer.getText().toString());
-                                    payablePrice.setText(itemPriceOffer.getText().toString());
+                                    positionTwo = i;
+                                    key = getRef(i).getKey();
+                                    notifyDataSetChanged();
+                                    two.setText(menuItemAdapter.getName());
                                 }
                             });
                             blockOne.setVisibility(View.GONE);
@@ -612,13 +575,15 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
                             blockOne.setVisibility(View.VISIBLE);
                             blockTwo.setVisibility(View.VISIBLE);
                         }
+
                         if (pizzaSize.equals("Medium"))
                         {
                             if (menuItemAdapter.getMedium().equals(priceCondition))
                             {
                                 menuItemViewHolder.setName(menuItemAdapter.getName());
-                                menuItemViewHolder.setImage(getApplicationContext(),menuItemAdapter.getImage());
+                                menuItemViewHolder.setImage(menuItemAdapter.getImage(),getApplicationContext());
                                 menuItemViewHolder.setMedium(menuItemAdapter.getMedium());
+                                menuItemViewHolder.setDescription(menuItemAdapter.getDescription());
                                 progressBarTwo.setVisibility(View.GONE);
                                 menuItemViewHolder.mView.setVisibility(View.VISIBLE);
                                 menuItemViewHolder.mView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -635,9 +600,10 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
                         {
                             if (menuItemAdapter.getLarge().equals(priceCondition))
                             {
-                                menuItemViewHolder.setName(menuItemAdapter.getName());
-                                menuItemViewHolder.setImage(getApplicationContext(),menuItemAdapter.getImage());
                                 menuItemViewHolder.setMedium(menuItemAdapter.getLarge());
+                                menuItemViewHolder.setName(menuItemAdapter.getName());
+                                menuItemViewHolder.setImage(menuItemAdapter.getImage(),getApplicationContext());
+                                menuItemViewHolder.setDescription(menuItemAdapter.getDescription());
                                 progressBarTwo.setVisibility(View.GONE);
                                 menuItemViewHolder.mView.setVisibility(View.VISIBLE);
                                 menuItemViewHolder.mView.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -648,9 +614,17 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
                                 menuItemViewHolder.mView.setLayoutParams(new RecyclerView.LayoutParams(0, 0));
                                 progressBarTwo.setVisibility(View.GONE);
                             }
+
                         }
 
-
+                        if (positionTwo==i)
+                        {
+                            listLayout.setVisibility(View.INVISIBLE);
+                        }
+                        else
+                        {
+                            listLayout.setVisibility(View.VISIBLE);
+                        }
 
 
                     }
@@ -666,43 +640,43 @@ public class ExclusiveOffersActivity extends AppCompatActivity {
             mView=itemView;
         }
 
-        public void setName(String name)
+        public void setImage(String image, Context context)
         {
-            TextView menuName = (TextView) mView.findViewById(R.id.menu_item_name);
-            menuName.setText(name);
+            ImageView imageView = (ImageView) mView.findViewById(R.id.everyday_special_offer_image);
+            Picasso.with(context).load(image).into(imageView);
         }
 
-        public void setImage(Context ctx, String image)
+        public void setName(String name)
         {
-            ImageView menuImage = (ImageView) mView.findViewById(R.id.menu_item_image);
-            Picasso.with(ctx).load(image).placeholder(R.drawable.ic_fastfood_210).into(menuImage);
+            TextView textView = (TextView) mView.findViewById(R.id.everyday_special_offer_name);
+            textView.setText(name);
+        }
+
+        public void setDescription(String description)
+        {
+            TextView textView = (TextView) mView.findViewById(R.id.everyday_special_offer_description);
+            textView.setText(description);
         }
 
         public void setMedium(String medium)
         {
-            TextView menuPrice = (TextView) mView.findViewById(R.id.menu_item_price);
+            TextView menuPrice = (TextView) mView.findViewById(R.id.everyday_special_offer_item_price);
             menuPrice.setText(medium);
         }
     }
 
-    public static class ShopDetailsViewHolder extends RecyclerView.ViewHolder {
 
+    public static class ExclusiveOfferAddressViewHolder extends RecyclerView.ViewHolder {
         View mView;
-        public ShopDetailsViewHolder(@NonNull View itemView) {
+        public ExclusiveOfferAddressViewHolder(@NonNull View itemView) {
             super(itemView);
-            mView = itemView;
+            mView=itemView;
         }
 
-        public void setShopName(String shopName)
+        public void setAddress(String address)
         {
-            TextView name = (TextView) mView.findViewById(R.id.offers_shop_details_name);
-            name.setText(shopName);
-        }
-
-        public void setShopFrontImage(String shopFrontImage, Context context)
-        {
-            ImageView image = (ImageView) mView.findViewById(R.id.offers_shop_details_shop_image);
-            Picasso.with(context).load(shopFrontImage).placeholder(R.drawable.ic_baseline_shop_default).into(image);
+            TextView addressText = (TextView) mView.findViewById(R.id.cart_address_layout_text);
+            addressText.setText(address);
         }
     }
 }

@@ -41,14 +41,16 @@ public class HomeFragment extends Fragment {
 
     private SliderLayout sliderLayout;
     private LinearLayout exploreLinearLayout;
-    private CardView everydayOffers;
+    private CardView everydayOffers,fridayOffers,festivalOffers,specialTimeOffers,bestsellerOffers;
     private TextView shopAddress,homeChangeAddress;
     private FirebaseAuth mAuth;
     private String currentUser,location;
-    private DatabaseReference userRef;
+    private DatabaseReference userRef, menuRef;
     private LinearLayout linearLayout;
+    private TextView offerValidation;
     private CardView myFavButton, pizzaButton, sideOrdersButton, desertsButton, beveragesButton;
     private ImageView share;
+    private TextView noOrder, track,trackId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -57,28 +59,46 @@ public class HomeFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser().getUid();
 
+
         sliderLayout =(SliderLayout) v.findViewById(R.id.imageSlider);
         sliderLayout.setIndicatorAnimation(IndicatorAnimations.WORM); //set indicator animation by using SliderLayout.Animations. :WORM or THIN_WORM or COLOR or DROP or FILL or NONE or SCALE or SCALE_DOWN or SLIDE and SWAP!!
-        sliderLayout.setScrollTimeInSec(3); //set scroll delay in seconds :
+        sliderLayout.setScrollTimeInSec(2); //set scroll delay in seconds :
 
+        trackId = (TextView) v.findViewById(R.id.track_id_home);
         pizzaButton = (CardView) v.findViewById(R.id.veg_pizza_home_card);
         sideOrdersButton = (CardView) v.findViewById(R.id.side_orders_home_card);
         desertsButton = (CardView) v.findViewById(R.id.deserts_home_card);
         beveragesButton = (CardView) v.findViewById(R.id.beverages_home_card);
 
+        noOrder = (TextView) v.findViewById(R.id.home_no_recent_orders);
+        track = (TextView) v.findViewById(R.id.home_track_orders);
+        offerValidation = (TextView) v.findViewById(R.id.offers_validation);
+
+        menuRef = FirebaseDatabase.getInstance().getReference().child("NewShops");
         share = (ImageView) v.findViewById(R.id.home_app_share_button);
         myFavButton = (CardView) v.findViewById(R.id.home_my_favourite);
         exploreLinearLayout = (LinearLayout) v.findViewById(R.id.home_explore_menu_layout);
-        everydayOffers = (CardView) v.findViewById(R.id.everyday_offers);
         linearLayout = (LinearLayout) v.findViewById(R.id.home_loading_bar);
         shopAddress = (TextView) v.findViewById(R.id.home_shop_address);
         homeChangeAddress = (TextView) v.findViewById(R.id.home_change_address);
         userRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser);
+
         userRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String address = snapshot.child("Address").getValue().toString();
                 shopAddress.setText(address);
+                if (snapshot.hasChild("recentOrder"))
+                {
+                    noOrder.setVisibility(View.GONE);
+                    track.setVisibility(View.VISIBLE);
+                    trackId.setText(snapshot.child("recentOrder").getValue().toString());
+                }
+                else
+                {
+                    noOrder.setVisibility(View.VISIBLE);
+                    track.setVisibility(View.GONE);
+                }
                 linearLayout.setVisibility(View.GONE);
             }
 
@@ -87,6 +107,21 @@ public class HomeFragment extends Fragment {
 
             }
         });
+
+        track.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(),MyOrderDetailsActivity.class);
+                intent.putExtra("key",trackId.getText().toString());
+                startActivity(intent);
+            }
+        });
+
+        everydayOffers = (CardView) v.findViewById(R.id.everyday_offers);
+        fridayOffers = (CardView) v.findViewById(R.id.friday_offers);
+        festivalOffers = (CardView) v.findViewById(R.id.festival_offers);
+        specialTimeOffers = (CardView) v.findViewById(R.id.special_time_offers);
+        bestsellerOffers = (CardView) v.findViewById(R.id.bestseller_offers);
 
         share.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,7 +142,45 @@ public class HomeFragment extends Fragment {
                 Intent intent = new Intent(getActivity(),MyMenuActivity.class);
                 intent.putExtra("shopAddress",shopAddress.getText().toString());
                 intent.putExtra("category","a");
+                intent.putExtra("categoryName","VegPizza");
                 startActivity(intent);
+            }
+        });
+
+        specialTimeOffers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                linearLayout.setVisibility(View.VISIBLE);
+                String addressEweHi = shopAddress.getText().toString();
+                menuRef.child(addressEweHi).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists())
+                        {
+                            String os = snapshot.child("specialTimeOffers").getValue().toString();
+                            offerValidation.setText(os);
+                        }
+
+                        if (offerValidation.getText().toString().equals("active"))
+                        {
+                            Intent intent = new Intent(getActivity(),ShopCartItemActivity.class);
+                            intent.putExtra("key",addressEweHi);
+                            intent.putExtra("offerStatus",offerValidation.getText().toString());
+                            startActivity(intent);
+                        }
+                        else
+                        {
+                            Toast.makeText(getActivity(), "This offer is currently inactive...\nStay tuned for interesting offers...", Toast.LENGTH_SHORT).show();
+                        }
+                        linearLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
             }
         });
 
@@ -117,6 +190,7 @@ public class HomeFragment extends Fragment {
                 Intent intent = new Intent(getActivity(),MyMenuActivity.class);
                 intent.putExtra("shopAddress",shopAddress.getText().toString());
                 intent.putExtra("category","b");
+                intent.putExtra("categoryName","SideOrders");
                 startActivity(intent);
             }
         });
@@ -127,6 +201,7 @@ public class HomeFragment extends Fragment {
                 Intent intent = new Intent(getActivity(),MyMenuActivity.class);
                 intent.putExtra("shopAddress",shopAddress.getText().toString());
                 intent.putExtra("category","c");
+                intent.putExtra("categoryName","Deserts");
                 startActivity(intent);
             }
         });
@@ -137,6 +212,7 @@ public class HomeFragment extends Fragment {
                 Intent intent = new Intent(getActivity(),MyMenuActivity.class);
                 intent.putExtra("shopAddress",shopAddress.getText().toString());
                 intent.putExtra("category","d");
+                intent.putExtra("categoryName","Beverages");
                 startActivity(intent);
             }
         });
@@ -144,9 +220,153 @@ public class HomeFragment extends Fragment {
         everydayOffers.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(getActivity(),ExclusiveOffersActivity.class);
-                intent.putExtra("shopAddress",shopAddress.getText().toString());
-                startActivity(intent);
+                linearLayout.setVisibility(View.VISIBLE);
+                String addressEweHi = shopAddress.getText().toString();
+                menuRef.child(addressEweHi).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                        if (snapshot.exists())
+                        {
+                            String os = snapshot.child("everydayOffers").getValue().toString();
+                            offerValidation.setText(os);
+                        }
+
+                        if (offerValidation.getText().toString().equals("active"))
+                        {
+                            Intent intent = new Intent(getActivity(),EverydayOffersActivity.class);
+                            intent.putExtra("key",addressEweHi);
+                            intent.putExtra("offerStatus",offerValidation.getText().toString());
+                            startActivity(intent);
+                        }
+                        else
+                        {
+                            Toast.makeText(getActivity(), "This offer is currently inactive...\nStay tuned for interesting offers...", Toast.LENGTH_SHORT).show();
+                        }
+                        linearLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+                //Toast.makeText(getActivity(),"No Offers details updated yet...",Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        bestsellerOffers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                linearLayout.setVisibility(View.VISIBLE);
+                String addressEweHi = shopAddress.getText().toString();
+                menuRef.child(addressEweHi).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                        if (snapshot.exists())
+                        {
+                            String os = snapshot.child("bestsellerOffers").getValue().toString();
+                            offerValidation.setText(os);
+                        }
+
+                        if (offerValidation.getText().toString().equals("active"))
+                        {
+                            Intent intent = new Intent(getActivity(),BestsellerActivity.class);
+                            intent.putExtra("key",addressEweHi);
+                            intent.putExtra("offerStatus",offerValidation.getText().toString());
+                            startActivity(intent);
+                        }
+                        else
+                        {
+                            Toast.makeText(getActivity(), "This offer is currently inactive...\nStay tuned for interesting offers...", Toast.LENGTH_SHORT).show();
+                        }
+                        linearLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+                //Toast.makeText(getActivity(),"No Offers details updated yet...",Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        festivalOffers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                linearLayout.setVisibility(View.VISIBLE);
+                String addressEweHi = shopAddress.getText().toString();
+                menuRef.child(addressEweHi).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists())
+                        {
+                            String os = snapshot.child("festivalOffers").getValue().toString();
+                            offerValidation.setText(os);
+                        }
+
+                        if (offerValidation.getText().toString().equals("active"))
+                        {
+                            Intent intent = new Intent(getActivity(),FestivalOfferActivity.class);
+                            intent.putExtra("key",addressEweHi);
+                            intent.putExtra("offerStatus",offerValidation.getText().toString());
+                            startActivity(intent);
+                        }
+                        else
+                        {
+                            Toast.makeText(getActivity(), "This offer is currently inactive...\nStay tuned for interesting offers...", Toast.LENGTH_SHORT).show();
+                        }
+                        linearLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+                //Toast.makeText(getActivity(),"No Offers details updated yet...",Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        fridayOffers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                linearLayout.setVisibility(View.VISIBLE);
+                String addressEweHi = shopAddress.getText().toString();
+                menuRef.child(addressEweHi).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists())
+                        {
+                            String os = snapshot.child("exclusiveOffersStatus").getValue().toString();
+                            offerValidation.setText(os);
+                        }
+
+                        if (offerValidation.getText().toString().equals("active"))
+                        {
+                            Intent intent = new Intent(getActivity(),ExclusiveOffersActivity.class);
+                            intent.putExtra("key",addressEweHi);
+                            intent.putExtra("offerStatus",offerValidation.getText().toString());
+                            startActivity(intent);
+                        }
+                        else
+                        {
+                            Toast.makeText(getActivity(), "This offer is currently inactive...\nStay tuned for interesting offers...", Toast.LENGTH_SHORT).show();
+                        }
+                        linearLayout.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
                 //Toast.makeText(getActivity(),"No Offers details updated yet...",Toast.LENGTH_SHORT).show();
             }
         });
@@ -237,25 +457,10 @@ public class HomeFragment extends Fragment {
                             HashMap hashMap = new HashMap();
                             hashMap.put("Address",location);
 
-                            userRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                    if (error!=null)
-                                    {
-                                        progressBar.setVisibility(View.GONE);
-                                        String message = error.getMessage();
-                                        Toast.makeText(v.getContext(),"Error Occurred : "+message,Toast.LENGTH_SHORT).show();
-                                        alertDialog.dismiss();
-                                    }
-                                    else
-                                    {
-                                        progressBar.setVisibility(View.GONE);
-
-                                        Toast.makeText(v.getContext(),"Location updated successfully...",Toast.LENGTH_SHORT).show();
-                                        alertDialog.dismiss();
-                                    }
-                                }
-                            });
+                            userRef.updateChildren(hashMap);
+                            progressBar.setVisibility(View.GONE);
+                            shopAddress.setText(location);
+                            alertDialog.dismiss();
                         }
                     }
                 });
@@ -281,7 +486,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void setSliderViews() {
-        for (int i = 1; i <= 2; i++) {
+        for (int i = 1; i <= 5; i++) {
 
             DefaultSliderView sliderView = new DefaultSliderView(getActivity());
 
@@ -291,6 +496,15 @@ public class HomeFragment extends Fragment {
                     break;
                 case 2:
                     sliderView.setImageDrawable(R.drawable.is2);
+                    break;
+                case 3:
+                    sliderView.setImageDrawable(R.drawable.is3);
+                    break;
+                case 4:
+                    sliderView.setImageDrawable(R.drawable.is4);
+                    break;
+                case 5:
+                    sliderView.setImageDrawable(R.drawable.is5);
                     break;
 
             }

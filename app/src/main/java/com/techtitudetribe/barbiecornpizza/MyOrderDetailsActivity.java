@@ -116,8 +116,6 @@ public class MyOrderDetailsActivity extends AppCompatActivity {
             }
         });
 
-
-
         trackOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

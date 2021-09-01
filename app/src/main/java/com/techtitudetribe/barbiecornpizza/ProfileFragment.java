@@ -146,24 +146,9 @@ public class ProfileFragment extends Fragment {
                             hashMap.put("Email",editEmail.getText().toString());
                             hashMap.put("ContactNumber",editContact.getText().toString());
 
-                            userRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                    if (error!=null)
-                                    {
-                                        progressBar.setVisibility(View.GONE);
-                                        String message = error.getMessage();
-                                        Toast.makeText(v.getContext(),"Error Occurred : "+message,Toast.LENGTH_SHORT).show();
-                                        alertDialog.dismiss();
-                                    }
-                                    else
-                                    {
-                                        progressBar.setVisibility(View.GONE);
-                                        Toast.makeText(v.getContext(),"User profile updated successfully...",Toast.LENGTH_SHORT).show();
-                                        alertDialog.dismiss();
-                                    }
-                                }
-                            });
+                            userRef.updateChildren(hashMap);
+                            progressBar.setVisibility(View.GONE);
+                            alertDialog.dismiss();
                         }
                     }
                 });

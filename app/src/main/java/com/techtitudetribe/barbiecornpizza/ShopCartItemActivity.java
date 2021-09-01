@@ -16,6 +16,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -51,10 +52,12 @@ public class ShopCartItemActivity extends AppCompatActivity {
     private RecyclerView cartAddressList;
     private TextView proceedToCheckout,noAddress,cartItemNumbers;
     private int position = -1;
-    String name = "";
+    private String name = "";
     private String address;
-    private String description;
+    private EditText customAddress;
+    private String description="";
     private Boolean isOpen = false;
+    private TextView customAddressButton;
     private TextView totalAmount,cartItemNames,cartItemDescription,cartToppingDescription;
     private TextView sellerId,shopName,oldItemNames;
 
@@ -85,6 +88,8 @@ public class ShopCartItemActivity extends AppCompatActivity {
         cartItemDescription = (TextView) findViewById(R.id.shop_cart_item_description);
         cartToppingDescription = (TextView) findViewById(R.id.cart_topping_description);
 
+        customAddressButton = (TextView) findViewById(R.id.custom_address_shop_cart_button);
+         customAddress = (EditText) findViewById(R.id.custom_address_shop_cart);
         sellerId = (TextView) findViewById(R.id.seller_id);
         shopName = (TextView) findViewById(R.id.shop_name);
 
@@ -112,7 +117,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
                 else
                 {
                     noAddress.setVisibility(View.VISIBLE);
-                    addressFrame.setVisibility(View.GONE);
+                    addressFrame.setVisibility(View.INVISIBLE);
                     addProgressBar.setVisibility(View.GONE);
                 }
             }
@@ -123,6 +128,21 @@ public class ShopCartItemActivity extends AppCompatActivity {
             }
         });
 
+
+        customAddressButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (TextUtils.isEmpty(customAddress.getText().toString().trim()))
+                {
+                    Toast.makeText(ShopCartItemActivity.this, "Please fill your address details", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    address = customAddress.getText().toString().trim();
+                    customAddressButton.setText("Saved!");
+                }
+            }
+        });
         cartRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -236,7 +256,8 @@ public class ShopCartItemActivity extends AppCompatActivity {
                 {
                     if (TextUtils.isEmpty(address))
                     {
-                        Toast.makeText(ShopCartItemActivity.this, "Please choose an address", Toast.LENGTH_SHORT).show();
+
+                        Toast.makeText(ShopCartItemActivity.this, "Please select an address...", Toast.LENGTH_SHORT).show();
                     }
                     else
                     {
@@ -260,7 +281,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
                                         String in = totalCost.child("itemName").getValue(String.class);
                                         String id = totalCost.child("itemDescription").getValue(String.class);
 
-                                        toppingDescription = "("+in+" Details)"+"\n"+id;
+                                        toppingDescription = toppingDescription + "("+in+" Details)"+"\n"+id+"\n\n";
                                     }
                                     if (name.equals(""))
                                     {
@@ -270,12 +291,36 @@ public class ShopCartItemActivity extends AppCompatActivity {
                                     {
                                         name = name+", "+foodName;
                                     }
+                                    if (description.equals(""))
+                                    {
+                                        description = description + foodDescription;
+                                    }
+                                    else
+                                    {
+                                        description = description+foodDescription;
+                                    }
                                     count = count + foodCalorie;
-                                    description = description + foodDescription;
                                     totalAmount.setText(String.valueOf(count));
                                     cartItemNames.setText(name);
                                     cartItemDescription.setText(description+"\n"+toppingDescription);
                                 }
+                                proceedToCheckout.setText(getResources().getString(R.string.selectAnAddress));
+                                addressLayout.startAnimation(close);
+                                addressLayout.setVisibility(View.GONE);
+                                isOpen=false;
+                                Intent intent = new Intent(getApplicationContext(),OrderConfirmationActivity.class);
+                                intent.putExtra("itemName",cartItemNames.getText().toString());
+                                intent.putExtra("totalPrice",totalAmount.getText().toString());
+                                intent.putExtra("itemDescription",cartItemDescription.getText().toString());
+                                intent.putExtra("address",address);
+                                intent.putExtra("sellerId",sellerId.getText().toString());
+                                intent.putExtra("shopName",shopName.getText().toString());
+                                intent.putExtra("itemNumbers",cartItemNumbers.getText().toString());
+                                intent.putExtra("key",key1);
+                                startActivity(intent);
+                                cartItemNames.setText("");
+                                cartItemDescription.setText("");
+
                             }
 
                             @Override
@@ -283,24 +328,12 @@ public class ShopCartItemActivity extends AppCompatActivity {
 
                             }
                         });
-                        proceedToCheckout.setText(getResources().getString(R.string.selectAnAddress));
-                        addressLayout.startAnimation(close);
-                        addressLayout.setVisibility(View.GONE);
-                        isOpen=false;
-                        Intent intent = new Intent(getApplicationContext(),OrderConfirmationActivity.class);
-                        intent.putExtra("itemName",cartItemNames.getText().toString());
-                        intent.putExtra("totalPrice",totalAmount.getText().toString());
-                        intent.putExtra("itemDescription",cartItemDescription.getText().toString());
-                        intent.putExtra("address",address);
-                        intent.putExtra("sellerId",sellerId.getText().toString());
-                        intent.putExtra("shopName",shopName.getText().toString());
-                        intent.putExtra("itemNumbers",cartItemNumbers.getText().toString());
-                        intent.putExtra("key",key1);
-                        startActivity(intent);
+
                     }
                 }
             }
         });
+
     }
 
     private void displayCartAddressList() {
@@ -395,87 +428,34 @@ public class ShopCartItemActivity extends AppCompatActivity {
                 cardView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        cartRef.child("CartItems").child(key).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task1) {
-                                if (task1.isSuccessful())
-                                {
-                                    if (oldItemNames.getText().toString().contains(cartItemAdapter.getItemName()+","))
-                                    {
-                                        String newItemNames = oldItemNames.getText().toString().replace(cartItemAdapter.getItemName()+",","");
-                                        HashMap hashMap = new HashMap();
-                                        hashMap.put("itemNames",newItemNames);
-                                        name =  name.replace(cartItemAdapter.getItemName()+",","");
-                                        cartRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                            @Override
-                                            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                                if (error!=null)
-                                                {
-                                                    String message = error.getMessage();
-                                                    Toast.makeText(getApplicationContext(), "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                                                }
-                                                else
-                                                {
-                                                    Toast.makeText(getApplicationContext(),"Item removed successfully...",Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                        });
-                                    }
-                                    else if (oldItemNames.getText().toString().contains(","+cartItemAdapter.getItemName()))
-                                    {
-                                        String newItemNames = oldItemNames.getText().toString().replace(","+cartItemAdapter.getItemName(),"");
-                                        HashMap hashMap = new HashMap();
-                                        hashMap.put("itemNames",newItemNames);
+                        cartRef.child("CartItems").child(key).removeValue();
+                        if (oldItemNames.getText().toString().contains(cartItemAdapter.getItemName()+","))
+                        {
+                            String newItemNames = oldItemNames.getText().toString().replace(cartItemAdapter.getItemName()+",","");
+                            HashMap hashMap = new HashMap();
+                            hashMap.put("itemNames",newItemNames);
+                            name =  name.replace(cartItemAdapter.getItemName()+",","");
+                            cartRef.updateChildren(hashMap);
+                        }
+                        else if (oldItemNames.getText().toString().contains(","+cartItemAdapter.getItemName()))
+                        {
+                            String newItemNames = oldItemNames.getText().toString().replace(","+cartItemAdapter.getItemName(),"");
+                            HashMap hashMap = new HashMap();
+                            hashMap.put("itemNames",newItemNames);
 
-                                        name = name.replace(","+cartItemAdapter.getItemName(),"");
-                                        cartRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                            @Override
-                                            public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
-                                                if (error1!=null)
+                            name = name.replace(","+cartItemAdapter.getItemName(),"");
+                            cartRef.updateChildren(hashMap);
+                            /*Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+                            startActivity(intent);
+                            finish();*/
+                        }
+                        else if (oldItemNames.getText().toString().contains(cartItemAdapter.getItemName()))
+                        {
+                            String newItemNames = oldItemNames.getText().toString().replace(cartItemAdapter.getItemName(),"");
 
-                                                {
-                                                    String message = error1.getMessage();
-                                                    Toast.makeText(getApplicationContext(), "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                                                }
-                                                else
-                                                {
-                                                    Intent intent = new Intent(getApplicationContext(),MainActivity.class);
-                                                    startActivity(intent);
-                                                    finish();
-                                                    Toast.makeText(getApplicationContext(),"Item removed successfully...",Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                        });
-                                    }
-                                    else if (oldItemNames.getText().toString().contains(cartItemAdapter.getItemName()))
-                                    {
-                                        String newItemNames = oldItemNames.getText().toString().replace(cartItemAdapter.getItemName(),"");
-
-                                        name = name.replace(cartItemAdapter.getItemName(),"");
-                                        cartRef.removeValue().addOnCompleteListener(new OnCompleteListener() {
-                                            @Override
-                                            public void onComplete(@NonNull Task task4) {
-                                                if (task4.isSuccessful())
-                                                {
-                                                    Toast.makeText(getApplicationContext(),"Item removed successfully...",Toast.LENGTH_SHORT).show();
-                                                }
-                                                else
-                                                {
-                                                    String message = task4.getException().getMessage();
-                                                    Toast.makeText(getApplicationContext(), "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                        });
-                                    }
-
-                                }
-                                else
-                                {
-                                    String mssg = task1.getException().toString();
-                                    Toast.makeText(getApplicationContext(), "Error Occurred : "+mssg, Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        });
+                            name = name.replace(cartItemAdapter.getItemName(),"");
+                            cartRef.removeValue();
+                        }
                     }
                 });
 

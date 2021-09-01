@@ -3,6 +3,7 @@ package com.techtitudetribe.barbiecornpizza;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -66,7 +67,7 @@ public class MyMenuActivity extends AppCompatActivity {
         shopAddress.setText(getIntent().getStringExtra("shopAddress"));
         //key = getIntent().getStringExtra("key");
         homeCategory = getIntent().getStringExtra("category").charAt(0);
-
+        categoryName = getIntent().getStringExtra("categoryName");
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser().getUid();
 
@@ -114,7 +115,6 @@ public class MyMenuActivity extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
-        linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         menuListView.setLayoutManager(linearLayoutManager);
 
         switch (homeCategory)
@@ -538,37 +538,58 @@ public class MyMenuActivity extends AppCompatActivity {
                     @Override
                     protected void populateViewHolder(MenuItemViewHolder menuItemViewHolder, MenuItemAdapter menuItemAdapter, int i) {
 
-                        RelativeLayout relativeLayout = (RelativeLayout) menuItemViewHolder.mView.findViewById(R.id.menu_item_relative_layout);
-                        ImageView cart = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_cart);
-                        ImageView explore = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_add);
-                        ImageView fav = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_fav);
+                        CardView cartLayout = (CardView) menuItemViewHolder.mView.findViewById(R.id.menu_item_cart_layout);
+                        CardView exploreLayout = (CardView) menuItemViewHolder.mView.findViewById(R.id.menu_item_add_layout);
+                        TextView fav = (TextView) menuItemViewHolder.mView.findViewById(R.id.menu_item_fav);
                         ProgressBar cartProgress = (ProgressBar) menuItemViewHolder.mView.findViewById(R.id.menu_item_progress_bar);
                         ProgressBar favProgress = (ProgressBar) menuItemViewHolder.mView.findViewById(R.id.menu_item_fav_progress_bar);
+                        View view = (View) menuItemViewHolder.mView.findViewById(R.id.menu_item_view);
+                        TextView cart = (TextView) menuItemViewHolder.mView.findViewById(R.id.menu_item_cart);
+                        ImageView list = (ImageView) menuItemViewHolder.mView.findViewById(R.id.menu_item_add);
+                        TextView bottom = (TextView) menuItemViewHolder.mView.findViewById(R.id.menu_item_description);
                         String menuKey = getRef(i).getKey();
 
-                        switch (i%4)
+                        switch (i%3)
                         {
-                            case 0 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                            case 0 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                cart.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
+                                fav.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_green));
                                 break;
-                            case 1 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                            case 1 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                cart.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
+                                fav.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_orange));
                                 break;
-                            case 2 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                            case 2 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                cart.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
+                                fav.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_sky_blue));
                                 break;
-                            case 3 : relativeLayout.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                            case 3 : view.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                list.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                bottom.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                cart.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
+                                fav.setBackgroundColor(ContextCompat.getColor(getApplicationContext(),R.color.creative_violet));
                                 break;
                         }
 
                         menuItemViewHolder.setName(menuItemAdapter.getName());
                         menuItemViewHolder.setImage(getApplicationContext(),menuItemAdapter.getImage());
                         menuItemViewHolder.setPrice(menuItemAdapter.getPrice());
+                        menuItemViewHolder.setDescription(menuItemAdapter.getDescription());
                         progressBar.setVisibility(View.GONE);
 
                         if(menuItemAdapter.getAvailability().equals("Yes"))
                         {
                             if(categoryName.equals("VegPizza")||categoryName.equals("Non-VegPizza"))
                             {
-                                explore.setVisibility(View.VISIBLE);
-                                cart.setVisibility(View.GONE);
+                                exploreLayout.setVisibility(View.VISIBLE);
+                                cartLayout.setVisibility(View.GONE);
+                                bottom.setVisibility(View.VISIBLE);
                                 fav.setVisibility(View.GONE);
                                 menuItemViewHolder.mView
                                         .setOnClickListener(new View.OnClickListener() {
@@ -587,19 +608,20 @@ public class MyMenuActivity extends AppCompatActivity {
                             }
                             else
                             {
-                                explore.setVisibility(View.GONE);
-                                cart.setVisibility(View.VISIBLE);
+                                exploreLayout.setVisibility(View.GONE);
+                                cartLayout.setVisibility(View.VISIBLE);
+                                bottom.setVisibility(View.GONE);
                                 fav.setVisibility(View.VISIBLE);
-                                cart.setOnClickListener(new View.OnClickListener() {
+                                cartLayout.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
-                                        cart.setVisibility(View.GONE);
+                                        cartLayout.setVisibility(View.GONE);
                                         cartProgress.setVisibility(View.VISIBLE);
 
                                         if (shopItemNamesText.getText().toString().contains(menuItemAdapter.getName()))
                                         {
                                             Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                            cart.setVisibility(View.GONE);
+                                            cartLayout.setVisibility(View.GONE);
                                             cartProgress.setVisibility(View.GONE);
                                         }
                                         else {
@@ -626,7 +648,10 @@ public class MyMenuActivity extends AppCompatActivity {
                                                         hashMap.put("itemImage", menuItemAdapter.getImage());
                                                         hashMap.put("itemQuantity", "1");
 
-                                                        cartRef.child(shopAddress.getText().toString()).child("CartItems").child("CartItem" + currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
+                                                        cartRef.child(shopAddress.getText().toString()).child("CartItems").child("CartItem" + currentDateandTime).updateChildren(hashMap);
+                                            cartLayout.setVisibility(View.GONE);
+                                            cartProgress.setVisibility(View.GONE);
+                                        /*, new DatabaseReference.CompletionListener() {
                                                             @Override
                                                             public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
                                                                 if(error1!=null)
@@ -643,7 +668,7 @@ public class MyMenuActivity extends AppCompatActivity {
                                                                     cartProgress.setVisibility(View.GONE);
                                                                 }
                                                             }
-                                                        });
+                                                        });*/
                                         }
                                     }
                                 });
@@ -651,8 +676,8 @@ public class MyMenuActivity extends AppCompatActivity {
                         }
                         else
                         {
-                            cart.setVisibility(View.GONE);
-                            explore.setVisibility(View.GONE);
+                            cartLayout.setVisibility(View.GONE);
+                            exploreLayout.setVisibility(View.GONE);
                             fav.setVisibility(View.GONE);
                             menuItemViewHolder.mView.setClickable(false);
                         }
@@ -664,7 +689,6 @@ public class MyMenuActivity extends AppCompatActivity {
                                 if (favItemNamesText.getText().toString().contains(menuItemAdapter.getName()))
                                 {
                                     fav.setVisibility(View.GONE);
-                                    Toast.makeText(MyMenuActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
                                 }
                                 else
                                 {
@@ -685,23 +709,8 @@ public class MyMenuActivity extends AppCompatActivity {
                                     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
                                     String currentDateandTime = sdf.format(new Date());
 
-                                    favRef.child("MyFav"+currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                        @Override
-                                        public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                            if(error!=null)
-                                            {
-                                                fav.setVisibility(View.VISIBLE);
-                                                favProgress.setVisibility(View.GONE);
-                                                Toast.makeText(MyMenuActivity.this, "Error Occurred : "+error.getMessage().toString(), Toast.LENGTH_SHORT).show();
-                                            }
-                                            else
-                                                {
-                                                    fav.setVisibility(View.GONE);
-                                                    favProgress.setVisibility(View.GONE);
-                                                    Toast.makeText(MyMenuActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
-                                                }
-                                        }
-                                    });
+                                    favRef.child("MyFav"+currentDateandTime).updateChildren(hashMap);
+                                    favProgress.setVisibility(View.GONE);
                                 }
 
                             }
@@ -736,6 +745,12 @@ public class MyMenuActivity extends AppCompatActivity {
         {
             TextView menuPrice = (TextView) mView.findViewById(R.id.menu_item_price);
             menuPrice.setText(price);
+        }
+
+        public void setDescription(String description)
+        {
+            TextView menuDescription = (TextView) mView.findViewById(R.id.menu_item_description);
+            menuDescription.setText(description);
         }
     }
 }

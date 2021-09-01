@@ -271,7 +271,7 @@ public class MyFavoriteActivity extends AppCompatActivity {
 
                             }
                         });
-
+ 
                         dltCard.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {

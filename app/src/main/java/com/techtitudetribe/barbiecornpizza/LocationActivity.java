@@ -156,12 +156,13 @@ public class LocationActivity extends AppCompatActivity {
         kanth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cityGo.setVisibility(View.VISIBLE);
+                //cityGo.setVisibility(View.VISIBLE);
                 cityChoose.setText("Kanth");
                 cityNamesLayout.startAnimation(close);
                 cityNamesLayout.setVisibility(View.GONE);
                 addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Kanth");
                 displayaddressList();
+                currentLocationCard.setVisibility(View.VISIBLE);
                 address = "Kanth";
                 coordinateRef.child("Kanth").addValueEventListener(new ValueEventListener() {
                     @Override
@@ -176,6 +177,7 @@ public class LocationActivity extends AppCompatActivity {
                             long2 = Double.valueOf(textLongitude.getText().toString());
                             lat1 = Double.valueOf(textLatitude2.getText().toString());
                             long1 = Double.valueOf(textLongitude2.getText().toString());
+                            functionOne();
                         }
                     }
 
@@ -184,18 +186,20 @@ public class LocationActivity extends AppCompatActivity {
 
                     }
                 });
+
             }
         });
         chandpur.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cityGo.setVisibility(View.VISIBLE);
+                //cityGo.setVisibility(View.VISIBLE);
                 cityChoose.setText("Chandpur");
                 cityNamesLayout.startAnimation(close);
                 address = "Chandpur";
                 cityNamesLayout.setVisibility(View.GONE);
                 addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Chandpur");
                 displayaddressList();
+                currentLocationCard.setVisibility(View.VISIBLE);
                 coordinateRef.child("Chandpur").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -209,6 +213,7 @@ public class LocationActivity extends AppCompatActivity {
                             long2 = Double.valueOf(textLongitude.getText().toString());
                             lat1 = Double.valueOf(textLatitude2.getText().toString());
                             long1 = Double.valueOf(textLongitude2.getText().toString());
+                            functionOne();
                         }
                     }
 
@@ -222,13 +227,14 @@ public class LocationActivity extends AppCompatActivity {
         moradabad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cityGo.setVisibility(View.VISIBLE);
+                //cityGo.setVisibility(View.VISIBLE);
                 cityChoose.setText("Moradabad");
                 address = "Moradabad";
                 cityNamesLayout.startAnimation(close);
                 cityNamesLayout.setVisibility(View.GONE);
                 addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Moradabad");
                 displayaddressList();
+                currentLocationCard.setVisibility(View.VISIBLE);
                 coordinateRef.child("Moradabad").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -242,6 +248,7 @@ public class LocationActivity extends AppCompatActivity {
                             long2 = Double.valueOf(textLongitude.getText().toString());
                             lat1 = Double.valueOf(textLatitude2.getText().toString());
                             long1 = Double.valueOf(textLongitude2.getText().toString());
+                            functionOne();
                         }
                     }
 
@@ -250,6 +257,7 @@ public class LocationActivity extends AppCompatActivity {
 
                     }
                 });
+
             }
         });
 
@@ -279,7 +287,7 @@ public class LocationActivity extends AppCompatActivity {
                     Toast.makeText(LocationActivity.this, "Please choose city...", Toast.LENGTH_SHORT).show();
                 } else {
 
-                    if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    /*if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         // notify user
                         final AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
                         builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
@@ -306,7 +314,7 @@ public class LocationActivity extends AppCompatActivity {
                             ActivityCompat.requestPermissions(LocationActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
 
                         }
-                    }
+                    }*/
 
                 }
 
@@ -363,6 +371,37 @@ public class LocationActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void functionOne() {
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            // notify user
+            final AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
+            builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
+                    .setCancelable(false)
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(final DialogInterface dialog, final int id) {
+                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            getLocation();
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(final DialogInterface dialog, final int id) {
+                            dialog.cancel();
+                        }
+                    });
+            final AlertDialog alert = builder.create();
+            alert.show();
+        } else {
+            if (ActivityCompat.checkSelfPermission(LocationActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                currentLocationCard.setVisibility(View.VISIBLE);
+                chooseCurrentLocation.setText("Fetching Details...");
+                getLocation();
+            } else {
+                ActivityCompat.requestPermissions(LocationActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
+
+            }
+        }
     }
 
     private void getLocation() {

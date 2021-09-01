@@ -36,6 +36,8 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +50,9 @@ public class CartFragment extends Fragment {
     private LinearLayout cartFragmentLayout;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
+    private TextView exploreMenu;
+    private DatabaseReference userRef;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -55,9 +60,11 @@ public class CartFragment extends Fragment {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser().getUid();
+        userRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser);
         cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
         progressBar = (ProgressBar) v.findViewById(R.id.my_cart_progress_bar);
 
+        //exploreMenu = (TextView) v.findViewById(R.id.cart_explore_menu);
         cartFragmentLayout = (LinearLayout) v.findViewById(R.id.cart_fragment_explore_menu_layout);
 
         recyclerView = (RecyclerView) v.findViewById(R.id.my_cart_list_view);
@@ -87,6 +94,32 @@ public class CartFragment extends Fragment {
             }
         });
 
+        cartFragmentLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                progressBar.setVisibility(View.VISIBLE);
+                userRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String shopAddress = snapshot.child("Address").getValue().toString();
+;                        Intent intent = new Intent(getActivity(),MyMenuActivity.class);
+                        intent.putExtra("shopAddress",shopAddress);
+                        intent.putExtra("category","a");
+                        intent.putExtra("categoryName","VegPizza");
+                        startActivity(intent);
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+
+            }
+        });
+
         return v;
     }
 
@@ -104,16 +137,21 @@ public class CartFragment extends Fragment {
 
                 String key = getRef(i).getKey();
                 LinearLayout linearLayout = (LinearLayout) cartShopItemViewHolder.mView.findViewById(R.id.shop_cart_item_background);
+                TextView textView = (TextView) cartShopItemViewHolder.mView.findViewById(R.id.shop_cart_item_click_here);
 
                 switch (i%4)
                 {
                     case 0 : linearLayout.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_green));
+                        textView.setTextColor(ContextCompat.getColor(getActivity(),R.color.creative_green));
                         break;
                     case 1 : linearLayout.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_red));
+                        textView.setTextColor(ContextCompat.getColor(getActivity(),R.color.creative_red));
                         break;
                     case 2 : linearLayout.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_sky_blue));
+                        textView.setTextColor(ContextCompat.getColor(getActivity(),R.color.creative_sky_blue));
                         break;
                     case 3 : linearLayout.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_violet));
+                        textView.setTextColor(ContextCompat.getColor(getActivity(),R.color.creative_violet));
                         break;
                 }
 

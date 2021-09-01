@@ -3,6 +3,7 @@ package com.techtitudetribe.barbiecornpizza;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -29,6 +30,7 @@ public class PhoneVerificationActivity extends AppCompatActivity {
     private EditText email, password;
     private TextView loginButton;
     private TextView register;
+    private ProgressDialog LoadingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,7 @@ public class PhoneVerificationActivity extends AppCompatActivity {
         loginButton  = (TextView) findViewById(R.id.login_button);
         register = (TextView) findViewById(R.id.phone_login);
 
+        LoadingBar = new ProgressDialog(this);
         address = getIntent().getStringExtra("Address").toString();
 
         sendOtp.setOnClickListener(new View.OnClickListener() {
@@ -82,6 +85,10 @@ public class PhoneVerificationActivity extends AppCompatActivity {
                 }
                 else
                 {
+                    LoadingBar.show();
+                    LoadingBar.setContentView(R.layout.progress_bar);
+                    LoadingBar.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                    LoadingBar.setCanceledOnTouchOutside(true);
                     firebaseAuth.signInWithEmailAndPassword(email.getText().toString().trim(),password.getText().toString().trim())
                             .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                                 @Override
@@ -92,10 +99,12 @@ public class PhoneVerificationActivity extends AppCompatActivity {
                                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                         startActivity(intent);
                                         finish();
+                                        LoadingBar.dismiss();
                                         Toast.makeText(PhoneVerificationActivity.this, "Login successfully...", Toast.LENGTH_SHORT).show();
                                     }
                                     else
                                     {
+                                        LoadingBar.dismiss();
                                         Toast.makeText(PhoneVerificationActivity.this, "Error Occurred : "+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }

@@ -55,7 +55,7 @@
     <string name="total">टोटल</string>
     <string name="proceedToPay">प्रोसीड टू पेय</string>
     <string name="placeOrder">प्लेस आर्डर</string>
-    <string name="cashOnDelivery">डिलवरी पर नकदी</string>
+    <string name="cashOnDelivery">नकदी</string>
     <string name="payViaUPI">UPI से भुगतान करें</string>
     <string name="dineIn">डाइन इन</string>
     <string name="deliver">डेलिवर</string>

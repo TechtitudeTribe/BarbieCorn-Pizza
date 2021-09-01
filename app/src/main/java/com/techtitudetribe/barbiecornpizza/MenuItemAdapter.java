@@ -1,14 +1,14 @@
 package com.techtitudetribe.barbiecornpizza;
 
 public class MenuItemAdapter {
-    String image,name,description,price,medium,large,availability;
+    String image,name,description,price,medium,large,availability,mediumCheese, largeCheese,mediumVegTopping, largeVegTopping;
 
     public MenuItemAdapter()
     {
 
     }
 
-    public MenuItemAdapter(String image, String name, String description, String price, String medium, String large, String availability) {
+    public MenuItemAdapter(String image, String name, String description, String price, String medium, String large, String availability, String mediumCheese, String largeCheese, String mediumVegTopping, String largeVegTopping) {
         this.image = image;
         this.name = name;
         this.description = description;
@@ -16,6 +16,42 @@ public class MenuItemAdapter {
         this.medium = medium;
         this.large = large;
         this.availability = availability;
+        this.mediumCheese = mediumCheese;
+        this.largeCheese = largeCheese;
+        this.mediumVegTopping = mediumVegTopping;
+        this.largeVegTopping = largeVegTopping;
+    }
+
+    public String getMediumVegTopping() {
+        return mediumVegTopping;
+    }
+
+    public void setMediumVegTopping(String mediumVegTopping) {
+        this.mediumVegTopping = mediumVegTopping;
+    }
+
+    public String getLargeVegTopping() {
+        return largeVegTopping;
+    }
+
+    public void setLargeVegTopping(String largeVegTopping) {
+        this.largeVegTopping = largeVegTopping;
+    }
+
+    public String getMediumCheese() {
+        return mediumCheese;
+    }
+
+    public void setMediumCheese(String mediumCheese) {
+        this.mediumCheese = mediumCheese;
+    }
+
+    public String getLargeCheese() {
+        return largeCheese;
+    }
+
+    public void setLargeCheese(String largeCheese) {
+        this.largeCheese = largeCheese;
     }
 
     public String getImage() {

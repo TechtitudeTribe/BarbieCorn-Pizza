@@ -2,9 +2,13 @@ package com.techtitudetribe.barbiecornpizza;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -18,6 +22,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int ID_ABOUT=5;
     private long backPressedTime;
     private FirebaseAuth mAuth;
+    private int requestCode = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,8 +139,39 @@ public class MainActivity extends AppCompatActivity {
         });
         meo.show(ID_HOME,true);
 
+        /*if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) {
+
+        } else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, requestCode);
+
+        }*/
+
+
+
         updateToken();
     }
+
+
+    /*@Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode)
+        {
+            case 44 : {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! do the
+                    // calendar task you need to do.
+                    Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
+
+                } else {
+
+                    Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+
+                }
+                return;
+            }
+        }
+    }*/
 
     private void updateToken() {
         FirebaseUser firebaseUser= FirebaseAuth.getInstance().getCurrentUser();
@@ -175,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(loginIntent);
         finish();
     }
+
 
 
 }

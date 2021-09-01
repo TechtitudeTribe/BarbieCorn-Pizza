@@ -8,6 +8,7 @@
     tools:context=".CartFragment">
 
     <RelativeLayout
+
         android:id="@+id/cart_fragment_header"
         android:layout_width="match_parent"
         android:layout_height="200dp"
@@ -15,6 +16,22 @@
         android:translationY="-20dp"
         android:background="@drawable/text_background"
         android:backgroundTint="@color/creative_red">
+
+        <!--<TextView
+            android:id="@+id/cart_explore_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Explore Menu"
+            android:textSize="14sp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingLeft="30dp"
+            android:textColor="@color/smoky_black"
+            android:fontFamily="serif"
+            android:background="@drawable/text_background"
+            android:backgroundTint="@color/creative_yellow_dark"
+            android:layout_margin="10dp"
+            android:layout_gravity="center"/>-->
 
         <com.github.siyamed.shapeimageview.mask.PorterShapeImageView
             android:layout_width="match_parent"
@@ -47,7 +64,7 @@
     </RelativeLayout>
 
     <LinearLayout
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/cart_fragment_explore_menu_layout"
         android:layout_centerInParent="true"
         android:translationY="100dp"
@@ -81,6 +98,8 @@
             android:fontFamily="serif"
             android:layout_marginTop="0dp"
             android:layout_gravity="center_horizontal"/>
+
+
         <!--<TextView
             android:id="@+id/cart_explore_menu_button"
             android:layout_width="wrap_content"
@@ -99,6 +118,8 @@
             android:background="@drawable/text_background"
             android:backgroundTint="@color/creative_yellow_dark"/>-->
     </LinearLayout>
+
+
 
     <FrameLayout
         android:id="@+id/my_cart_swipe_container"
