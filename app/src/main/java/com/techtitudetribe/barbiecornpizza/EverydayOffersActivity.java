@@ -124,6 +124,7 @@ public class EverydayOffersActivity extends AppCompatActivity {
                 {
                     address = customAddress.getText().toString().trim();
                     customAddressButton.setText("Saved!");
+                    placeOrder.setText(getResources().getString(R.string.placeOrder));
                 }
             }
         });

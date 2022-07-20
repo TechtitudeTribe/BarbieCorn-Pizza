@@ -23,7 +23,6 @@ public class ContactFragment extends Fragment {
 
     private static String number = "+91 9927357499";
     private static final int REQUEST_CALL = 1;
-    private RelativeLayout needHelpRelativeLayout;
     private ImageView facebook,gmail,phone,close;
     private TextView message;
 
@@ -97,7 +96,7 @@ public class ContactFragment extends Fragment {
             return new Intent(Intent.ACTION_VIEW, Uri.parse("fb://profile/100027918345946"));
         } catch (PackageManager.NameNotFoundException e) {
             Toast.makeText(context, "Ple" +
-                    "+ase install facebook...", Toast.LENGTH_SHORT).show();
+                    "ase install facebook...", Toast.LENGTH_SHORT).show();
             return new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/profile.php?id=100027918345946"));
         }
 

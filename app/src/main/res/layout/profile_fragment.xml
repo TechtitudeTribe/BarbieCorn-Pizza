@@ -13,81 +13,93 @@
         android:id="@+id/personal_info_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp"
         android:background="@drawable/text_background"
         android:backgroundTint="@color/white"
-        android:translationZ="5dp"
-        android:layout_margin="10dp">
+        android:orientation="vertical"
+        android:translationZ="5dp">
 
         <TextView
             android:id="@+id/profile_logo"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_gravity="center"
-            android:translationZ="5dp"
             android:layout_margin="15dp"
+            android:background="@drawable/circular_background"
+            android:backgroundTint="@color/creative_red"
+            android:fontFamily="serif"
+            android:gravity="center"
             android:text="U"
             android:textColor="@color/white"
-            android:gravity="center"
-            android:fontFamily="serif"
             android:textSize="40sp"
             android:textStyle="bold"
-            android:background="@drawable/circular_background"
-            android:backgroundTint="@color/creative_red"/>
+            android:translationZ="5dp" />
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_margin="10dp">
+            android:layout_margin="10dp"
+            android:orientation="horizontal">
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginLeft="10dp">
+                android:layout_marginLeft="10dp"
+                android:orientation="vertical">
+
                 <TextView
                     android:id="@+id/profile_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="serif"
                     android:text="Username"
-                    android:textStyle="bold"
                     android:textColor="@color/smoky_black"
                     android:textSize="18sp"
-                    android:fontFamily="serif"/>
+                    android:textStyle="bold" />
+
                 <TextView
                     android:id="@+id/profile_number"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="serif"
                     android:text="(+91) 00000 00000"
                     android:textColor="@color/smoky_black"
-                    android:textSize="14sp"
-                    android:fontFamily="serif"/>
+                    android:textSize="14sp" />
+
                 <TextView
                     android:id="@+id/profile_email"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="serif"
                     android:text="xyz@example.com"
                     android:textColor="@color/smoky_black"
-                    android:textSize="14sp"
-                    android:fontFamily="serif"/>
+                    android:textSize="14sp" />
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:orientation="horizontal"
-                android:layout_margin="10dp"
                 android:layout_alignParentRight="true"
-                android:layout_centerVertical="true">
+                android:layout_centerVertical="true"
+                android:layout_margin="10dp"
+                android:orientation="horizontal">
+
                 <View
                     android:layout_width="2dp"
                     android:layout_height="match_parent"
-                    android:background="@color/smoky_black"/>
+                    android:background="@color/smoky_black" />
+
                 <ImageView
                     android:id="@+id/edit_user_profile"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
                     android:layout_gravity="center_vertical"
-                    android:src="@drawable/ic_edit"/>
+                    android:src="@drawable/ic_edit" />
             </LinearLayout>
         </RelativeLayout>
 

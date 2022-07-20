@@ -51,7 +51,7 @@ public class MyOrderDetailsActivity extends AppCompatActivity {
         key = getIntent().getExtras().getString("key");
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        orderRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyOrders").child(key);
+        orderRef = FirebaseDatabase.getInstance().getReference().child("MyOrders").child(currentUser).child(key);
 
         itemName = (TextView) findViewById(R.id.order_item_description_name);
         itemPrice = (TextView) findViewById(R.id.order_item_description_price);

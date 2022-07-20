@@ -129,7 +129,7 @@ public class HomeFragment extends Fragment {
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, "BarbieCorn Pizza");
-                String shareMessage= "*BarbieCorn Pizza*\nThe Taste of Town\n\n\n*Get 10% off on your first order.*\n\n\nDownload this awesome application to order delicious foods...\n";
+                String shareMessage= "*BarbieCorn Pizza*\nThe Taste of Town\n\n\n*Get 25% off on your first order.*\n\n\nDownload this awesome application to order delicious foods...\n";
                 shareMessage = shareMessage + "\n\nhttps://play.google.com/store/apps/details?id=com.techtitudetribe.barbiecornpizza"+"\n\n";
                 shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
                 startActivity(Intent.createChooser(shareIntent, "choose one"));
@@ -384,10 +384,12 @@ public class HomeFragment extends Fragment {
                 CardView chandpur = (CardView) view.findViewById(R.id.location_chandpur_card);
                 CardView kanth = (CardView) view.findViewById(R.id.location_kanth_card);
                 CardView mbd = (CardView) view.findViewById(R.id.location_moradabad_card);
+                CardView kashipur = (CardView) view.findViewById(R.id.location_kashipur_card);
 
                 TextView chandpurText = (TextView) view.findViewById(R.id.location_chandpur);
                 TextView kanthText = (TextView) view.findViewById(R.id.location_kanth);
                 TextView mbdText = (TextView) view.findViewById(R.id.location_moradabad);
+                TextView kashipurText = (TextView) view.findViewById(R.id.location_kashipur);
 
                 chandpur.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -395,6 +397,8 @@ public class HomeFragment extends Fragment {
                         chandpurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.white));
                         mbdText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
                         kanthText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kashipurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kashipurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         chandpurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_red));
                         mbdText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         kanthText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
@@ -408,6 +412,8 @@ public class HomeFragment extends Fragment {
                         chandpurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
                         mbdText.setTextColor(ContextCompat.getColor(getActivity(),R.color.white));
                         kanthText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kashipurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kashipurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         chandpurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         mbdText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_red));
                         kanthText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
@@ -421,10 +427,27 @@ public class HomeFragment extends Fragment {
                         chandpurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
                         mbdText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
                         kanthText.setTextColor(ContextCompat.getColor(getActivity(),R.color.white));
+                        kashipurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kashipurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         chandpurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         mbdText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
                         kanthText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_red));
                         location = "Kanth";
+                    }
+                });
+
+                kashipur.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        chandpurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        mbdText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kanthText.setTextColor(ContextCompat.getColor(getActivity(),R.color.smoky_black));
+                        kashipurText.setTextColor(ContextCompat.getColor(getActivity(),R.color.white));
+                        kashipurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.creative_red));
+                        chandpurText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
+                        mbdText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
+                        kanthText.setBackgroundColor(ContextCompat.getColor(getActivity(),R.color.white));
+                        location = "Kashipur";
                     }
                 });
 

@@ -53,7 +53,6 @@ public class CartFragment extends Fragment {
     private TextView exploreMenu;
     private DatabaseReference userRef;
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.cart_fragment, container, false);
@@ -61,7 +60,7 @@ public class CartFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser().getUid();
         userRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser);
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
+        cartRef = FirebaseDatabase.getInstance().getReference().child("MyCart").child(currentUser);
         progressBar = (ProgressBar) v.findViewById(R.id.my_cart_progress_bar);
 
         //exploreMenu = (TextView) v.findViewById(R.id.cart_explore_menu);

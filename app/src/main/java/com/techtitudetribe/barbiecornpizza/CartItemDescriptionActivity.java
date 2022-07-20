@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.Animation;
@@ -25,6 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class CartItemDescriptionActivity extends AppCompatActivity {
 
@@ -32,7 +35,7 @@ public class CartItemDescriptionActivity extends AppCompatActivity {
     private TextView itemName, itemDescription, itemPrice, itemQuantity,itemImageUrl;
     private FirebaseAuth firebaseAuth;
     private DatabaseReference cartRef;
-    private String currentUser, key,key1;
+    private String currentUser, key,key1, price;
     private ProgressBar progressBar;
     private int quantity;
     private ProgressDialog LoadingBar;
@@ -44,15 +47,16 @@ public class CartItemDescriptionActivity extends AppCompatActivity {
 
         key = getIntent().getStringExtra("key");
         key1 = getIntent().getStringExtra("key1");
+        price = getIntent().getStringExtra("price");
+
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(key1).child("CartItems").child(key);
+        cartRef = FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser).child(key1).child(key);
 
         LoadingBar = new ProgressDialog(this);
 
         decrease = (ImageView) findViewById(R.id.cart_item_decrease);
         increase = (ImageView) findViewById(R.id.cart_item_increase);
-
 
         itemImage = (ImageView) findViewById(R.id.cart_item_description_image);
         itemName = (TextView) findViewById(R.id.cart_item_description_name);
@@ -63,104 +67,6 @@ public class CartItemDescriptionActivity extends AppCompatActivity {
         increase = (ImageView) findViewById(R.id.cart_item_increase);
         decrease = (ImageView) findViewById(R.id.cart_item_decrease);
         itemImageUrl = (TextView) findViewById(R.id.cart_item_description_image_url);
-
-
-
-        increase.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LoadingBar.show();
-                LoadingBar.setContentView(R.layout.progress_bar);
-                LoadingBar.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-                LoadingBar.setCanceledOnTouchOutside(false);
-
-                quantity = Integer.parseInt(itemQuantity.getText().toString());
-                quantity = quantity +1;
-                cartRef.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        String price = snapshot.child("itemPrice").getValue().toString();
-                        HashMap hashMap = new HashMap();
-                        hashMap.put("itemCustomizedPrice",String.valueOf(Integer.parseInt(price)*quantity));
-                        hashMap.put("itemQuantity",String.valueOf(quantity));
-
-                        cartRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                            @Override
-                            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                if (error!=null)
-                                {
-                                    String message = error.getMessage();
-                                    Toast.makeText(getApplicationContext(), "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                                    LoadingBar.dismiss();
-                                }
-                                else
-                                {
-                                    itemQuantity.setText(String.valueOf(quantity));
-                                    itemPrice.setText(String.valueOf(Integer.parseInt(price)*quantity));
-                                    LoadingBar.dismiss();
-                                }
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
-            }
-        });
-        decrease.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (Integer.parseInt(itemQuantity.getText().toString())==1)
-                {
-
-                }
-                else
-                {
-                    LoadingBar.show();
-                    LoadingBar.setContentView(R.layout.progress_bar);
-                    LoadingBar.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-                    LoadingBar.setCanceledOnTouchOutside(false);
-                    quantity = Integer.parseInt(itemQuantity.getText().toString());
-                    quantity = quantity - 1;
-                    cartRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot snapshot) {
-                            String price = snapshot.child("itemPrice").getValue().toString();
-
-                            HashMap hashMap = new HashMap();
-                            hashMap.put("itemCustomizedPrice",String.valueOf(Integer.parseInt(price)*quantity));
-                            hashMap.put("itemQuantity",String.valueOf(quantity));
-
-                            cartRef.updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                    if (error!=null)
-                                    {
-                                        String message = error.getMessage();
-                                        Toast.makeText(getApplicationContext(), "Error Occurred : "+message, Toast.LENGTH_SHORT).show();
-                                        LoadingBar.dismiss();
-                                    }
-                                    else
-                                    {
-                                        itemQuantity.setText(String.valueOf(quantity));
-                                        itemPrice.setText(String.valueOf(Integer.parseInt(price)*quantity));
-                                        LoadingBar.dismiss();
-                                    }
-                                }
-                            });
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-
-                        }
-                    });
-                }
-            }
-        });
 
         cartRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -185,5 +91,91 @@ public class CartItemDescriptionActivity extends AppCompatActivity {
 
             }
         });
+
+        increase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LoadingBar.show();
+                LoadingBar.setContentView(R.layout.progress_bar);
+                LoadingBar.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                LoadingBar.setCanceledOnTouchOutside(false);
+
+                quantity = Integer.parseInt(itemQuantity.getText().toString());
+                quantity = quantity +1;
+
+                Map<String,Object> hashMap = new HashMap<>();
+                hashMap.put("itemCustomizedPrice",String.valueOf(Integer.parseInt(price)*quantity));
+                hashMap.put("itemQuantity",String.valueOf(quantity));
+
+                cartRef.updateChildren(hashMap).addOnCompleteListener(new OnCompleteListener() {
+                    @Override
+                    public void onComplete(@NonNull Task task) {
+                        if (task.isSuccessful())
+                        {
+                            itemQuantity.setText(String.valueOf(quantity));
+                            itemPrice.setText(String.valueOf(Integer.parseInt(price)*quantity));
+                            LoadingBar.dismiss();
+                        }
+                        else
+                        {
+                            LoadingBar.dismiss();
+                            Toast.makeText(CartItemDescriptionActivity.this, "Error Occurred : "+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+            }
+        });
+        decrease.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (Integer.parseInt(itemQuantity.getText().toString())==1)
+                {
+
+                }
+                else
+                {
+                    LoadingBar.show();
+                    LoadingBar.setContentView(R.layout.progress_bar);
+                    LoadingBar.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                    LoadingBar.setCanceledOnTouchOutside(false);
+
+                    quantity = Integer.parseInt(itemQuantity.getText().toString());
+                    quantity = quantity - 1;
+
+                    Map<String,Object> hashMap = new HashMap<>();
+                    hashMap.put("itemCustomizedPrice",String.valueOf(Integer.parseInt(price)*quantity));
+                    hashMap.put("itemQuantity",String.valueOf(quantity));
+
+                    cartRef.updateChildren(hashMap).addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(@NonNull Task task) {
+                            if (task.isSuccessful())
+                            {
+                                itemQuantity.setText(String.valueOf(quantity));
+                                itemPrice.setText(String.valueOf(Integer.parseInt(price)*quantity));
+                                LoadingBar.dismiss();
+                            }
+                            else
+                            {
+                                LoadingBar.dismiss();
+                                Toast.makeText(CartItemDescriptionActivity.this, "Error Occurred : "+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        Intent intent = new Intent(CartItemDescriptionActivity.this,ShopCartItemActivity.class);
+        intent.putExtra("key",key1);
+        startActivity(intent);
+        ((Activity)CartItemDescriptionActivity.this).finish();
     }
 }

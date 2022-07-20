@@ -41,7 +41,7 @@ import java.util.Map;
 public class MyFavoriteActivity extends AppCompatActivity {
 
     private LinearLayout noFavLayout;
-    private DatabaseReference favRef,cartRef;
+    private DatabaseReference favRef,cartRef,cartDetailRef;
     private FirebaseAuth firebaseAuth;
     private String currentUser;
     private ProgressBar progressBar;
@@ -49,6 +49,8 @@ public class MyFavoriteActivity extends AppCompatActivity {
     private TextView shopItemNamesText;
     private TextView localNameText;
     private long shopItems =0, cartItems =0;
+    private CartShopItemAdapter cartShopItemAdapter;
+    private CartItemAdapter cartItemAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,11 +59,15 @@ public class MyFavoriteActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        favRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyFavorites");
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
+        favRef = FirebaseDatabase.getInstance().getReference().child("MyFavorites").child(currentUser);
+        cartRef = FirebaseDatabase.getInstance().getReference().child("MyCart").child(currentUser);
+        cartDetailRef = FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser);
 
         noFavLayout = (LinearLayout) findViewById(R.id.no_fav_layout);
         progressBar = (ProgressBar) findViewById(R.id.my_fav_progress_bar);
+
+        cartShopItemAdapter = new CartShopItemAdapter();
+        cartItemAdapter = new CartItemAdapter();
 
         localNameText = (TextView) findViewById(R.id.local_fav_text);
         shopItemNamesText = (TextView) findViewById(R.id.fav_shop_item_names_text);
@@ -157,7 +163,7 @@ public class MyFavoriteActivity extends AppCompatActivity {
 
                                 localNameText.setText(myFavAdapter.getItemName());
                                 //shopItemNamesText.setText(myFavAdapter.getItemName());
-                                cartRef.child(myFavAdapter.getShopName()).child("CartItems").addValueEventListener(new ValueEventListener() {
+                                cartDetailRef.child(myFavAdapter.getShopName()).addValueEventListener(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                                         if (snapshot.hasChildren())
@@ -211,53 +217,53 @@ public class MyFavoriteActivity extends AppCompatActivity {
                                             progressBar1.setVisibility(View.GONE);
                                         } else {
 
-                                            HashMap hashMap1 = new HashMap();
-                                            hashMap1.put("count", shopItems + 1);
-                                            hashMap1.put("itemNames", shopItemNamesText.getText().toString() + myFavAdapter.getItemName());
-                                            hashMap1.put("shopName", myFavAdapter.getShopName());
-                                            hashMap1.put("sellerId", myFavAdapter.getSellerId());
-                                            hashMap1.put("deliveryCharge", myFavAdapter.getDeliveryCharge());
-                                            hashMap1.put("upi", myFavAdapter.getUpi());
 
-                                            cartRef.child(myFavAdapter.getShopName()).updateChildren(hashMap1, new DatabaseReference.CompletionListener() {
+                                            cartShopItemAdapter.setCount(shopItems + 1);
+                                            cartShopItemAdapter.setItemNames(shopItemNamesText.getText().toString() + myFavAdapter.getItemName());
+                                            cartShopItemAdapter.setShopName(myFavAdapter.getShopName());
+                                            cartShopItemAdapter.setSellerId(myFavAdapter.getSellerId());
+                                            cartShopItemAdapter.setDeliveryCharge(myFavAdapter.getDeliveryCharge());
+                                            cartShopItemAdapter.setUpi(myFavAdapter.getUpi());
+
+                                            ValueEventListener valueEventListener = new ValueEventListener() {
                                                 @Override
-                                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                                                    if (error != null) {
-                                                        String message = error.getMessage();
-                                                        Toast.makeText(getApplicationContext(), "Error Occurred : " + message, Toast.LENGTH_SHORT).show();
-                                                        progressBar1.setVisibility(View.GONE);
-                                                        cardView.setVisibility(View.VISIBLE);
-                                                    } else {
-                                                        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
-                                                        String currentDateandTime = sdf.format(new Date());
-
-                                                        HashMap hashMap = new HashMap();
-                                                        hashMap.put("count", cartItems + 1);
-                                                        hashMap.put("itemName", myFavAdapter.getItemName());
-                                                        hashMap.put("itemPrice", myFavAdapter.getItemPrice());
-                                                        hashMap.put("itemCustomizedPrice", myFavAdapter.getItemPrice());
-                                                        hashMap.put("itemDescription", myFavAdapter.getItemDescription());
-                                                        hashMap.put("itemImage", myFavAdapter.getItemImage());
-                                                        hashMap.put("itemQuantity", "1");
-
-                                                        cartRef.child(myFavAdapter.getShopName()).child("CartItems").child("CartItem" + currentDateandTime).updateChildren(hashMap, new DatabaseReference.CompletionListener() {
-                                                            @Override
-                                                            public void onComplete(@Nullable DatabaseError error1, @NonNull DatabaseReference ref) {
-                                                                if (error1 != null) {
-                                                                    String message = error1.getMessage();
-                                                                    Toast.makeText(getApplicationContext(), "Error Occurred : " + message, Toast.LENGTH_SHORT).show();
-                                                                    progressBar1.setVisibility(View.GONE);
-                                                                    cardView.setVisibility(View.VISIBLE);
-                                                                } else {
-                                                                    Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                                                    cardView.setVisibility(View.INVISIBLE);
-                                                                    progressBar1.setVisibility(View.GONE);
-                                                                }
-                                                            }
-                                                        });
-                                                    }
+                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                    cartRef.child(myFavAdapter.getShopName()).setValue(cartShopItemAdapter);
                                                 }
-                                            });
+
+                                                @Override
+                                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                                }
+                                            };
+                                            cartRef.child(myFavAdapter.getShopName()).addListenerForSingleValueEvent(valueEventListener);
+
+                                            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
+                                            String currentDateandTime = sdf.format(new Date());
+                                            cartItemAdapter.setCount(cartItems + 1);
+                                            cartItemAdapter.setItemDescription( myFavAdapter.getItemDescription());
+                                            cartItemAdapter.setItemCustomizedPrice(myFavAdapter.getItemPrice());
+                                            cartItemAdapter.setItemImage(myFavAdapter.getItemImage());
+                                            cartItemAdapter.setItemName( myFavAdapter.getItemName());
+                                            cartItemAdapter.setItemPrice(myFavAdapter.getItemPrice());
+                                            cartItemAdapter.setItemQuantity("1");
+
+                                            ValueEventListener valueEventListener1 = new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                                   cartDetailRef.child(myFavAdapter.getShopName()).child("CartItem" + currentDateandTime).setValue(cartItemAdapter);
+                                                }
+
+                                                @Override
+                                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                                }
+                                            };
+                                            cartDetailRef.child(myFavAdapter.getShopName()).child("CartItem" + currentDateandTime).addListenerForSingleValueEvent(valueEventListener1);
+
+                                            Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
+                                            cardView.setVisibility(View.INVISIBLE);
+                                            progressBar1.setVisibility(View.GONE);
                                         }
                                     }
 

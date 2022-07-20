@@ -55,6 +55,7 @@ public class ProfileFragment extends Fragment {
     private RelativeLayout userUpdateProfile;
     private ImageView editUserProfile;
     private String languageString;
+    private ProfileAdapter profileAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -76,6 +77,7 @@ public class ProfileFragment extends Fragment {
         logOutButton = (RelativeLayout) v.findViewById(R.id.log_out_button);
         changeLanguageButton = (RelativeLayout) v.findViewById(R.id.change_language_button);
 
+        profileAdapter = new ProfileAdapter();
 
         editUserProfile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,12 +143,14 @@ public class ProfileFragment extends Fragment {
                             Toast.makeText(v.getContext(), "E-mail is invalid", Toast.LENGTH_SHORT).show();
                             progressBar.setVisibility(View.GONE);
                         }else {
+
                             HashMap hashMap = new HashMap();
-                            hashMap.put("Name",editUsername.getText().toString());
                             hashMap.put("Email",editEmail.getText().toString());
+                            hashMap.put("Name",editUsername.getText().toString());
                             hashMap.put("ContactNumber",editContact.getText().toString());
 
                             userRef.updateChildren(hashMap);
+
                             progressBar.setVisibility(View.GONE);
                             alertDialog.dismiss();
                         }

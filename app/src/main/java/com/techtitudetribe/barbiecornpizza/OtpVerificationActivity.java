@@ -35,6 +35,7 @@ public class OtpVerificationActivity extends AppCompatActivity {
     private TextView otpVerification;
     private EditText otpText;
     private TextView otpTimer,otpResend;
+    private ProfileAdapter profileAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +46,12 @@ public class OtpVerificationActivity extends AppCompatActivity {
         address = getIntent().getStringExtra("Address").toString();
         mAuth=FirebaseAuth.getInstance();
 
-
         otpVerification = (TextView) findViewById(R.id.otp_verification);
         otpText = (EditText) findViewById(R.id.otp_text);
         otpTimer = (TextView) findViewById(R.id.otp_timer);
         otpResend = (TextView) findViewById(R.id.otp_resend);
+
+        profileAdapter = new ProfileAdapter();
 
         initiateOtp();
         reverseTimer(60,otpTimer,otpResend);
@@ -128,34 +130,24 @@ public class OtpVerificationActivity extends AppCompatActivity {
                                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                                     if (!snapshot.hasChild(currentUser))
                                     {
-                                        HashMap hashMap = new HashMap();
-                                        hashMap.put("Name","Username");
-                                        hashMap.put("ContactNumber",phoneNumber.replace("+91",""));
-                                        hashMap.put("Address",address);
-                                        hashMap.put("Email","xyz@example.com");
-                                        userRef.child(currentUser).updateChildren(hashMap).addOnCompleteListener(new OnCompleteListener() {
+                                        userRef.child(currentUser).child("Address").child(address);
+                                        userRef.child(currentUser).child("Email").setValue("xyz@example.com");
+                                        userRef.child(currentUser).child("Name").setValue("Username");
+                                        userRef.child(currentUser).child("ContactNumber").setValue(phoneNumber.replace("+91",""))
+                                        .addOnCompleteListener(new OnCompleteListener<Void>() {
                                             @Override
-                                            public void onComplete(@NonNull Task task1) {
-                                                if (task1.isSuccessful())
-                                                {
-                                                    Intent intent = new Intent(OtpVerificationActivity.this,MainActivity.class);
-                                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                    startActivity(intent);
-                                                    finish();
-                                                }
-                                                else
-                                                {
-                                                    String mssg = task1.getException().getMessage();
-                                                    Toast.makeText(OtpVerificationActivity.this, "Error Occurred : "+mssg, Toast.LENGTH_SHORT).show();
-                                                }
+                                            public void onComplete(@NonNull Task<Void> task) {
+                                                Intent intent = new Intent(OtpVerificationActivity.this,MainActivity.class);
+                                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                startActivity(intent);
+                                                finish();
                                             }
                                         });
+
                                     }
                                     else
                                     {
-                                        HashMap hashMap = new HashMap();
-                                        hashMap.put("Address",address);
-                                        userRef.child(currentUser).updateChildren(hashMap).addOnCompleteListener(new OnCompleteListener() {
+                                        userRef.child(currentUser).child("Address").setValue(address).addOnCompleteListener(new OnCompleteListener() {
                                             @Override
                                             public void onComplete(@NonNull Task task1) {
                                                 if (task1.isSuccessful())
@@ -211,4 +203,5 @@ public class OtpVerificationActivity extends AppCompatActivity {
             }
         }.start();
     }
+
 }

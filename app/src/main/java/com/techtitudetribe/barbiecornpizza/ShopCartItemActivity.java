@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -43,7 +44,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
-    private DatabaseReference cartRef,addRef;
+    private DatabaseReference cartRef,addRef,cartDetailRef;
     private String currentUser,key1;
     private RelativeLayout noCartLayout;
     private RelativeLayout addressLayout;
@@ -71,8 +72,9 @@ public class ShopCartItemActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser().getUid();
-        addRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyAddresses");
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(key1);
+        addRef = FirebaseDatabase.getInstance().getReference().child("MyAddresses").child(currentUser);
+        cartRef = FirebaseDatabase.getInstance().getReference().child("MyCart").child(currentUser).child(key1);
+        cartDetailRef = FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser).child(key1);
 
         noAddress = (TextView) findViewById(R.id.no_address_found);
         addressFrame = (FrameLayout) findViewById(R.id.cart_fragment_address_list_frame);
@@ -140,6 +142,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
                 {
                     address = customAddress.getText().toString().trim();
                     customAddressButton.setText("Saved!");
+                    proceedToCheckout.setText(getResources().getString(R.string.goForCheckout));
                 }
             }
         });
@@ -164,7 +167,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
             }
         });
 
-        cartRef.child("CartItems").addValueEventListener(new ValueEventListener() {
+        cartDetailRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists())
@@ -190,7 +193,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
         Animation open = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.order_track_open);
         Animation close = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.order_track_close);
 
-        cartRef.child("CartItems").addListenerForSingleValueEvent(new ValueEventListener() {
+        cartDetailRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String name = "";
@@ -262,7 +265,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
                     else
                     {
 
-                        cartRef.child("CartItems").addListenerForSingleValueEvent(new ValueEventListener() {
+                        cartDetailRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
@@ -318,6 +321,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
                                 intent.putExtra("itemNumbers",cartItemNumbers.getText().toString());
                                 intent.putExtra("key",key1);
                                 startActivity(intent);
+                                ((Activity)ShopCartItemActivity.this).finish();
                                 cartItemNames.setText("");
                                 cartItemDescription.setText("");
 
@@ -353,6 +357,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
                         cartAddressViewHolder.setAddress(myAddressAdapter.getAddress());
 
                         addProgressBar.setVisibility(View.GONE);
+
                         cartAddressViewHolder.mView.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
@@ -380,7 +385,7 @@ public class ShopCartItemActivity extends AppCompatActivity {
     }
 
     private void displayCartItems() {
-        Query sort = cartRef.child("CartItems").orderByChild("count");
+        Query sort = cartDetailRef.orderByChild("count");
         FirebaseRecyclerAdapter<CartItemAdapter, CartItemViewHolder> firebaseRecyclerAdapter
                 = new FirebaseRecyclerAdapter<CartItemAdapter, CartItemViewHolder>(
                 CartItemAdapter.class,
@@ -428,23 +433,18 @@ public class ShopCartItemActivity extends AppCompatActivity {
                 cardView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        cartRef.child("CartItems").child(key).removeValue();
+                        cartDetailRef.child(key).removeValue();
                         if (oldItemNames.getText().toString().contains(cartItemAdapter.getItemName()+","))
                         {
                             String newItemNames = oldItemNames.getText().toString().replace(cartItemAdapter.getItemName()+",","");
-                            HashMap hashMap = new HashMap();
-                            hashMap.put("itemNames",newItemNames);
                             name =  name.replace(cartItemAdapter.getItemName()+",","");
-                            cartRef.updateChildren(hashMap);
+                            cartRef.child("itemNames").setValue(newItemNames);
                         }
                         else if (oldItemNames.getText().toString().contains(","+cartItemAdapter.getItemName()))
                         {
                             String newItemNames = oldItemNames.getText().toString().replace(","+cartItemAdapter.getItemName(),"");
-                            HashMap hashMap = new HashMap();
-                            hashMap.put("itemNames",newItemNames);
-
                             name = name.replace(","+cartItemAdapter.getItemName(),"");
-                            cartRef.updateChildren(hashMap);
+                            cartRef.child("itemNames").setValue(newItemNames);
                             /*Intent intent = new Intent(getApplicationContext(),MainActivity.class);
                             startActivity(intent);
                             finish();*/
@@ -452,7 +452,6 @@ public class ShopCartItemActivity extends AppCompatActivity {
                         else if (oldItemNames.getText().toString().contains(cartItemAdapter.getItemName()))
                         {
                             String newItemNames = oldItemNames.getText().toString().replace(cartItemAdapter.getItemName(),"");
-
                             name = name.replace(cartItemAdapter.getItemName(),"");
                             cartRef.removeValue();
                         }
@@ -465,7 +464,9 @@ public class ShopCartItemActivity extends AppCompatActivity {
                         Intent intent = new Intent(getApplicationContext(),CartItemDescriptionActivity.class);
                         intent.putExtra("key",key);
                         intent.putExtra("key1",key1);
+                        intent.putExtra("price",cartItemAdapter.getItemPrice());
                         startActivity(intent);
+                        ((Activity)ShopCartItemActivity.this).finish();
                     }
                 });
             }

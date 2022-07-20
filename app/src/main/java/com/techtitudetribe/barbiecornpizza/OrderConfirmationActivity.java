@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.multidex.MultiDex;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -15,6 +17,8 @@ import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -45,8 +49,8 @@ public class OrderConfirmationActivity extends AppCompatActivity {
     private TextView itemNames;
     private TextView proceedToPay;
     private FirebaseAuth firebaseAuth;
-    private DatabaseReference cartRef, orderRef,userRef,adminRef,offerRef,contactRef;
-    private String currentUser,address,key;
+    private DatabaseReference cartRef,cartDetailRef, orderRef,userRef,adminRef,offerRef,contactRef, couponRef;
+    private String currentUser,address,key, actualPriceAmount;
     private long orderItems=0,adminItems=0;
     private TextView orderConfirmationDate,orderConfirmationNumbers;
     private RadioGroup paymentMethod, orderType;
@@ -61,7 +65,11 @@ public class OrderConfirmationActivity extends AppCompatActivity {
     private RelativeLayout firstOfferLayout;
     private double orderCondition=200;
     private RelativeLayout distanceCondition;
-    private TextView cancelDistanceCondition, shopNumber;
+    private TextView cancelDistanceCondition, shopNumber, couponCodeApply;
+    private MyOrderAdapter myOrderAdapter;
+    private OrderShopAdapter orderShopAdapter;
+    private EditText couponCodeText;
+    private LinearLayout couponCodeLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,18 +77,27 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_order_confirmation);
 
         sellerIdGlobal = getIntent().getStringExtra("sellerId");
+        actualPriceAmount = getIntent().getStringExtra("totalPrice");
 
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
-        orderRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyOrders");
+        cartRef = FirebaseDatabase.getInstance().getReference().child("MyCart").child(currentUser);
+        cartDetailRef = FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser);
+        orderRef = FirebaseDatabase.getInstance().getReference().child("MyOrders").child(currentUser);
         contactRef = FirebaseDatabase.getInstance().getReference().child("NewShops");
-        adminRef = FirebaseDatabase.getInstance().getReference().child("Sellers").child(sellerIdGlobal).child("MyOrders");
+        couponRef = FirebaseDatabase.getInstance().getReference().child("GiftVrouchers");
+        adminRef = FirebaseDatabase.getInstance().getReference().child("MySellerOrders").child(sellerIdGlobal);
         userRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser);
+
+        myOrderAdapter = new MyOrderAdapter();
+        orderShopAdapter = new OrderShopAdapter();
 
         firstOfferLayout = (RelativeLayout) findViewById(R.id.first_order_offer_main);
         applyFirstOffer = (TextView) findViewById(R.id.apply_first_order_offer);
         cancelFirstOrder = (TextView) findViewById(R.id.close_first_order_offer);
+        couponCodeApply = (TextView) findViewById(R.id.apply_coupon_code);
+        couponCodeText = (EditText) findViewById(R.id.coupon_code_text);
+        couponCodeLayout = (LinearLayout) findViewById(R.id.coupon_code_layout);
 
         shopNumber = (TextView) findViewById(R.id.seller_number_order_confirmation);
         distanceCondition = (RelativeLayout) findViewById(R.id.distance_condition_card);
@@ -96,7 +113,6 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         deliveryCharge = (TextView) findViewById(R.id.delivery_charge);
         actualPrice = (TextView) findViewById(R.id.order_confirmation_price);
         orderShopUpi = (TextView) findViewById(R.id.order_shop_upi);
-
         sellerId = (TextView) findViewById(R.id.order_seller_id);
         shopName = (TextView) findViewById(R.id.order_shop_name);
         userName = (TextView) findViewById(R.id.order_user_name);
@@ -105,9 +121,79 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         paymentMethod = (RadioGroup) findViewById(R.id.payment_method);
         orderType = (RadioGroup) findViewById(R.id.order_type);
 
+        actualPrice.setText(getIntent().getExtras().getString("totalPrice"));
+        itemNames.setText(getIntent().getExtras().getString("itemName"));
+        orderConfirmationDescription.setText(getIntent().getExtras().getString("itemDescription"));
+        address = getIntent().getStringExtra("address");
         sellerId.setText(getIntent().getStringExtra("sellerId"));
         shopName.setText(getIntent().getStringExtra("shopName"));
         key = getIntent().getStringExtra("key");
+
+        couponRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists())
+                {
+
+                    String code = snapshot.child("title").getValue().toString();
+                    String discount = snapshot.child("discount").getValue().toString();
+                    String statusCoupon = snapshot.child("status").getValue().toString();
+                    String minCoupon = snapshot.child("minimumAmount").getValue().toString();
+
+                    if (statusCoupon.equals("active"))
+                    {
+                        couponCodeLayout.setVisibility(View.VISIBLE);
+                        couponCodeApply.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                if (!couponCodeApply.getText().toString().equals("Applied"))
+                                {
+                                    if(TextUtils.isEmpty(couponCodeText.getText().toString().trim()))
+                                    {
+                                        Toast.makeText(OrderConfirmationActivity.this, "Please enter a valid Coupon Code...", Toast.LENGTH_SHORT).show();
+                                    }
+                                    else
+                                    {
+                                        String codeUser = couponCodeText.getText().toString().trim();
+
+                                        if(Double.parseDouble(actualPriceAmount) < Double.parseDouble(minCoupon))
+                                        {
+                                            Toast.makeText(OrderConfirmationActivity.this, "Minimum order should be of Rs. "+minCoupon+" ...", Toast.LENGTH_SHORT).show();
+                                        }
+                                        else
+                                        {
+                                            if (code.toUpperCase().equals(codeUser.toUpperCase()))
+                                            {
+                                                double discountMain = Double.parseDouble(actualPrice.getText().toString()) * Integer.parseInt(discount)/100;
+                                                double finalAmount = Double.parseDouble(actualPrice.getText().toString()) - discountMain;
+                                                actualPrice.setText(String.valueOf(finalAmount));
+                                                totalPrice.setText(String.valueOf(finalAmount+Integer.parseInt(deliveryCharge.getText().toString())));
+                                                couponCodeApply.setText("Applied");
+                                            }
+                                            else
+                                            {
+                                                Toast.makeText(OrderConfirmationActivity.this, "This Coupon Code had been expired or You have entered the wrong one.\nTry Again...", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+                        });
+                    }
+                    else
+                    {
+                        couponCodeLayout.setVisibility(View.GONE);
+                    }
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
 
         contactRef.child(getIntent().getStringExtra("shopName")).addValueEventListener(new ValueEventListener() {
             @Override
@@ -144,7 +230,7 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                         {
                             if (os.equals("active"))
                             {
-                                double discount = Integer.parseInt(actualPrice.getText().toString()) * 0.1;
+                                double discount = Integer.parseInt(actualPrice.getText().toString()) * 0.2;
                                 double finalAmount = Integer.parseInt(actualPrice.getText().toString()) - discount;
                                 actualPrice.setText(String.valueOf(finalAmount));
                                 totalPrice.setText(String.valueOf(finalAmount+Integer.parseInt(deliveryCharge.getText().toString())));
@@ -163,11 +249,6 @@ public class OrderConfirmationActivity extends AppCompatActivity {
 
         paymentMethod.clearCheck();
         orderType.clearCheck();
-
-        actualPrice.setText(getIntent().getExtras().getString("totalPrice"));
-        itemNames.setText(getIntent().getExtras().getString("itemName"));
-        orderConfirmationDescription.setText(getIntent().getExtras().getString("itemDescription"));
-        address = getIntent().getStringExtra("address");
 
         cartRef.child(shopName.getText().toString()).addValueEventListener(new ValueEventListener() {
             @Override
@@ -200,12 +281,12 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                     {
                         deliveryCharge.setText(dc);
                     }
-                    totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
+                    totalPrice.setText(String.valueOf(Double.parseDouble(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
                 }
                 else
                 {
                     deliveryCharge.setText("00");
-                    totalPrice.setText(String.valueOf(Integer.parseInt(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
+                    totalPrice.setText(String.valueOf(Double.parseDouble(actualPrice.getText().toString())+Integer.parseInt(deliveryCharge.getText().toString())));
                 }
             }
 
@@ -349,7 +430,7 @@ public class OrderConfirmationActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (!applyFirstOffer.getText().toString().equals("Applied"))
                 {
-                    double discount = Integer.parseInt(actualPrice.getText().toString()) * 0.1;
+                    double discount = Integer.parseInt(actualPrice.getText().toString()) * 0.25;
                     double finalAmount = Integer.parseInt(actualPrice.getText().toString()) - discount;
                     actualPrice.setText(String.valueOf(finalAmount));
                     totalPrice.setText(String.valueOf(finalAmount+Integer.parseInt(deliveryCharge.getText().toString())));
@@ -473,32 +554,36 @@ public class OrderConfirmationActivity extends AppCompatActivity {
 
             if (isApplied.equals("Yes"))
             {
-                HashMap hashMap3 = new HashMap();
-                hashMap3.put("FirstOrder","Yes");
-
-                userRef.updateChildren(hashMap3);
+                userRef.child("FirstOrder").setValue("Yes");
             }
 
+            myOrderAdapter.setCount(orderItems+1);
+            myOrderAdapter.setAddress(address);
+            myOrderAdapter.setOrderId(currentDateandTime);
+            myOrderAdapter.setItemDescription(orderConfirmationDescription.getText().toString());
+            myOrderAdapter.setItemNames(itemNames.getText().toString());
+            myOrderAdapter.setItemNumber(getIntent().getExtras().getString("itemNumbers"));
+            myOrderAdapter.setItemPlacedDate(currentDate+" at "+currentTime);
+            myOrderAdapter.setItemStatus("Ordered");
+            myOrderAdapter.setItemTotalAmount(totalPrice.getText().toString());
+            myOrderAdapter.setOrderType(orderTypeString);
+            myOrderAdapter.setPaymentMethod(paymentMethodString);
+            myOrderAdapter.setUserId(currentUser);
 
-            HashMap hashMap = new HashMap();
-            hashMap.put("itemNames",itemNames.getText().toString());
-            hashMap.put("itemNumber",getIntent().getExtras().getString("itemNumbers"));
-            hashMap.put("count",orderItems+1);
-            hashMap.put("itemTotalAmount",totalPrice.getText().toString());
-            hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
-            hashMap.put("itemStatus","Ordered");
-            hashMap.put("userId",currentUser);
-            hashMap.put("paymentMethod",paymentMethodString);
-            hashMap.put("orderType",orderTypeString);
-            hashMap.put("address",address);
-            hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
+            ValueEventListener listener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    orderRef.child("MyOrder"+currentDateandTime).setValue(myOrderAdapter);
+                }
 
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
 
-            orderRef.child("MyOrder"+currentDateandTime).updateChildren(hashMap);
-            HashMap hashmap5 = new HashMap();
-            hashmap5.put("recentOrder","MyOrder"+currentDateandTime);
+                }
+            };
 
-            userRef.updateChildren(hashmap5);
+            orderRef.child("MyOrder"+currentDateandTime).addListenerForSingleValueEvent(listener);
+            userRef.child("recentOrder").setValue("MyOrder"+currentDateandTime);
             sendUserDetailsToAdmin(currentDate,currentDateandTime,currentTime);
         }
     }
@@ -582,24 +667,34 @@ public class OrderConfirmationActivity extends AppCompatActivity {
                     userRef.updateChildren(hashMap3);
                 }
 
-                HashMap hashMap = new HashMap();
-                hashMap.put("itemNames",itemNames.getText().toString());
-                hashMap.put("itemNumber",getIntent().getExtras().getString("itemNumbers"));
-                hashMap.put("count",orderItems+1);
-                hashMap.put("itemTotalAmount",totalPrice.getText().toString());
-                hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
-                hashMap.put("itemStatus","Ordered");
-                hashMap.put("userId",currentUser);
-                hashMap.put("paymentMethod",paymentMethodString);
-                hashMap.put("orderType",orderTypeString);
-                hashMap.put("address",address);
-                hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
 
-                orderRef.child(currentDateAdmin).child("MyOrder"+currentDateandTime).updateChildren(hashMap);
-                HashMap hashmap5 = new HashMap();
-                hashmap5.put("recentOrder","MyOrder"+currentDateandTime);
+                myOrderAdapter.setCount(orderItems+1);
+                myOrderAdapter.setAddress(address);
+                myOrderAdapter.setOrderId(currentDateandTime);
+                myOrderAdapter.setItemDescription(orderConfirmationDescription.getText().toString());
+                myOrderAdapter.setItemNames(itemNames.getText().toString());
+                myOrderAdapter.setItemNumber(getIntent().getExtras().getString("itemNumbers"));
+                myOrderAdapter.setItemPlacedDate(currentDate+" at "+currentTime);
+                myOrderAdapter.setItemStatus("Ordered");
+                myOrderAdapter.setItemTotalAmount(totalPrice.getText().toString());
+                myOrderAdapter.setOrderType(orderTypeString);
+                myOrderAdapter.setPaymentMethod(paymentMethodString);
+                myOrderAdapter.setUserId(currentUser);
 
-                userRef.updateChildren(hashmap5);
+                ValueEventListener listener = new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        orderRef.child("MyOrder"+currentDateandTime).setValue(myOrderAdapter);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                };
+
+                orderRef.child("MyOrder"+currentDateandTime).addListenerForSingleValueEvent(listener);
+                userRef.child("recentOrder").setValue("MyOrder"+currentDateandTime);
                 sendUserDetailsToAdminPay(currentDate,currentDateandTime,currentTime);
                 Log.e("UPI", "payment successfull: "+approvalRefNo);
             }
@@ -634,29 +729,45 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMd", Locale.getDefault());
         String currentDateAdmin = sdf.format(new Date());
 
-        HashMap hashMap = new HashMap();
-        hashMap.put("itemNames",itemNames.getText().toString());
-        hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
-        hashMap.put("count",adminItems+1);
-        hashMap.put("itemTotalAmount",totalPrice.getText().toString());
-        hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
-        hashMap.put("itemStatus","Ordered");
-        hashMap.put("userId",currentUser);
-        hashMap.put("paymentMethod",paymentMethodString);
-        hashMap.put("orderType",orderTypeString);
-        hashMap.put("address",address);
-        hashMap.put("deliveryCharge",deliveryCharge.getText().toString());
-        hashMap.put("titleName","MyOrder"+currentDateandTime);
-        hashMap.put("customerName",userName.getText().toString());
-        hashMap.put("customerNumber",userContact.getText().toString());
-        hashMap.put("shopName",shopName.getText().toString());
 
-        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap);
+        orderShopAdapter.setCount(orderItems+1);
+        orderShopAdapter.setAddress(address);
+        orderShopAdapter.setOrderId(currentDateandTime);
+        orderShopAdapter.setItemDescription(orderConfirmationDescription.getText().toString());
+        orderShopAdapter.setItemNames(itemNames.getText().toString());
+        orderShopAdapter.setItemPlacedDate(currentDate+" at "+currentTime);
+        orderShopAdapter.setItemStatus("Ordered");
+        orderShopAdapter.setItemTotalAmount(totalPrice.getText().toString());
+        orderShopAdapter.setOrderType(orderTypeString);
+        orderShopAdapter.setPaymentMethod(paymentMethodString);
+        orderShopAdapter.setUserId(currentUser);
+        orderShopAdapter.setDeliveryCharge(deliveryCharge.getText().toString());
+        orderShopAdapter.setTitleName("MyOrder"+currentDateandTime);
+        orderShopAdapter.setCustomerName(userName.getText().toString());
+        orderShopAdapter.setCustomerNumber(userContact.getText().toString());
+        orderShopAdapter.setShopName(shopName.getText().toString());
+
+        ValueEventListener valueEventListener1 = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).setValue(orderShopAdapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+
+
+        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).addListenerForSingleValueEvent(valueEventListener1);
         Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
         proceedToPay.setVisibility(View.GONE);
         placeOrder.setVisibility(View.GONE);
         placeProgressBar.setVisibility(View.GONE);
         cartRef.child(shopName.getText().toString()).removeValue();
+        cartDetailRef.child(shopName.getText().toString()).removeValue();
         FirebaseDatabase.getInstance().getReference().child("Tokens").child(sellerId.getText().toString()).child("token").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -671,7 +782,6 @@ public class OrderConfirmationActivity extends AppCompatActivity {
 
             }
         });
-        //SmsManager.getDefault().sendTextMessage(sellerNumber, "BBC", "New Order is placed...", null,null);
         sendUserToMainActivity();
     }
 
@@ -680,24 +790,38 @@ public class OrderConfirmationActivity extends AppCompatActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMd", Locale.getDefault());
         String currentDateAdmin = sdf.format(new Date());
 
-        HashMap hashMap = new HashMap();
-        hashMap.put("itemNames",itemNames.getText().toString());
-        hashMap.put("itemDescription",orderConfirmationDescription.getText().toString());
-        hashMap.put("count",adminItems+1);
-        hashMap.put("itemTotalAmount",totalPrice.getText().toString());
-        hashMap.put("itemPlacedDate",currentDate+" at "+currentTime);
-        hashMap.put("itemStatus","Ordered");
-        hashMap.put("userId",currentUser);
-        hashMap.put("paymentMethod",paymentMethodString);
-        hashMap.put("orderType",orderTypeString);
-        hashMap.put("address",address);
-        hashMap.put("deliveryCharge",deliveryCharge.getText().toString());
-        hashMap.put("titleName","MyOrder"+currentDateandTime);
-        hashMap.put("customerName",userName.getText().toString());
-        hashMap.put("customerNumber",userContact.getText().toString());
-        hashMap.put("shopName",shopName.getText().toString());
+        orderShopAdapter.setCount(orderItems+1);
+        orderShopAdapter.setAddress(address);
+        orderShopAdapter.setOrderId(currentDateandTime);
+        orderShopAdapter.setItemDescription(orderConfirmationDescription.getText().toString());
+        orderShopAdapter.setItemNames(itemNames.getText().toString());
+        orderShopAdapter.setItemPlacedDate(currentDate+" at "+currentTime);
+        orderShopAdapter.setItemStatus("Ordered");
+        orderShopAdapter.setItemTotalAmount(totalPrice.getText().toString());
+        orderShopAdapter.setOrderType(orderTypeString);
+        orderShopAdapter.setPaymentMethod(paymentMethodString);
+        orderShopAdapter.setUserId(currentUser);
+        orderShopAdapter.setDeliveryCharge(deliveryCharge.getText().toString());
+        orderShopAdapter.setTitleName("MyOrder"+currentDateandTime);
+        orderShopAdapter.setCustomerName(userName.getText().toString());
+        orderShopAdapter.setCustomerNumber(userContact.getText().toString());
+        orderShopAdapter.setShopName(shopName.getText().toString());
 
-        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).updateChildren(hashMap);
+        ValueEventListener valueEventListener1 = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).setValue(orderShopAdapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+
+
+        adminRef.child(currentDateAdmin).child(currentUser+currentDateandTime).addListenerForSingleValueEvent(valueEventListener1);
         Toast.makeText(OrderConfirmationActivity.this, "Your Order is placed successfully...", Toast.LENGTH_SHORT).show();
         proceedToPay.setVisibility(View.GONE);
         placeOrder.setVisibility(View.GONE);
@@ -746,4 +870,16 @@ public class OrderConfirmationActivity extends AppCompatActivity {
             }
         });
     }*/
+
+
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(OrderConfirmationActivity.this,ShopCartItemActivity.class);
+        intent.putExtra("key",key);
+        startActivity(intent);
+        ((Activity)OrderConfirmationActivity.this).finish();
+    }
+
+
 }

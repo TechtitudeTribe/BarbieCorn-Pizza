@@ -60,6 +60,7 @@ public class MyAddressActivity extends AppCompatActivity {
     private EditText houseNo, area, landmark, town, pincode;
     private ProgressBar progressBar,newAddProgressBar;
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private MyAddressAdapter myAddressAdapter1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,9 +69,11 @@ public class MyAddressActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        addressRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyAddresses");
+        addressRef = FirebaseDatabase.getInstance().getReference().child("MyAddresses").child(currentUser);
         newAddressLayout = (RelativeLayout) findViewById(R.id.add_new_address_layout);
         floatingActionButton = (FloatingActionButton) findViewById(R.id.add_address_floating_button);
+
+        myAddressAdapter1 = new MyAddressAdapter();
 
         noAddress = (RelativeLayout) findViewById(R.id.no_address_layout);
         newAddressCancel = (TextView) findViewById(R.id.add_new_address_cancel_button);
@@ -167,12 +170,20 @@ public class MyAddressActivity extends AppCompatActivity {
                 else
                 {
                     newAddProgressBar.setVisibility(View.VISIBLE);
-                    HashMap hashMap = new HashMap();;
-                    hashMap.put("count",count+1);
-                    hashMap.put("address",houseNo.getText().toString()+", "+area.getText().toString()+", near "+landmark.getText().toString()+", "+town.getText().toString()+" - "+pincode.getText().toString());
+                    myAddressAdapter1.setAddress(houseNo.getText().toString()+", "+area.getText().toString()+", near "+landmark.getText().toString()+", "+town.getText().toString()+" - "+pincode.getText().toString());
+                    myAddressAdapter1.setCount(count+1);
+                    ValueEventListener valueEventListener = new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            addressRef.child("Address"+currentDateandTime).setValue(myAddressAdapter1);
+                        }
 
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
 
-                    addressRef.child("Address"+currentDateandTime).updateChildren(hashMap);
+                        }
+                    };
+                    addressRef.child("Address"+currentDateandTime).addValueEventListener(valueEventListener);
                     newAddressLayout.setVisibility(View.GONE);
                     newAddressLayout.startAnimation(zoom_out);
                     floatingActionButton.startAnimation(clockwise);

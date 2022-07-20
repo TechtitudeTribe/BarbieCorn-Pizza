@@ -77,6 +77,12 @@
             android:layout_marginTop="30dp"/>
     </RelativeLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/fav_available"
+        android:visibility="gone"/>
+
     <RelativeLayout
         android:id="@+id/menu_item_description_item_details_layout"
         android:layout_below="@+id/menu_item_description_header"

@@ -2,18 +2,28 @@ package com.techtitudetribe.barbiecornpizza;
 
 public class CartItemAdapter {
     String itemName, itemPrice, itemImage, itemDescription, itemQuantity, itemCustomizedPrice;
+    long count;
 
     public CartItemAdapter() {
 
     }
 
-    public CartItemAdapter(String itemName, String itemPrice, String itemImage, String itemDescription, String itemQuantity, String itemCustomizedPrice) {
+    public CartItemAdapter(String itemName, String itemPrice, String itemImage, String itemDescription, String itemQuantity, String itemCustomizedPrice, long count) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemImage = itemImage;
         this.itemDescription = itemDescription;
         this.itemQuantity = itemQuantity;
         this.itemCustomizedPrice = itemCustomizedPrice;
+        this.count = count;
+    }
+
+    public long getCount() {
+        return count;
+    }
+
+    public void setCount(long count) {
+        this.count = count;
     }
 
     public String getItemName() {

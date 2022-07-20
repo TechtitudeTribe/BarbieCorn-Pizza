@@ -71,13 +71,16 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
     private String cheeseBurst = "No";
     private String thinCrust = "No";
     private RecyclerView vegToppingList, nonVegToppingList;
-    private DatabaseReference toppingRef;
+    private DatabaseReference toppingRef, cartDetailRef;
     private ProgressBar vegToppingProgressBar, nonVegToppingProgressBar;
     private String toppingGlobal="No";
-    private Boolean itemAvailable = false,favItemAvailable=false;
+    private Boolean favItemAvailable=false;
     private ImageView favButon;
     private ProgressBar favProgressBar;
-    private String favStatus="";
+    private String favStatus="",itemNameString;
+    private MyFavAdapter myFavAdapter;
+    private CartShopItemAdapter cartShopItemAdapter;
+    private CartItemAdapter cartItemAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,11 +90,18 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
 
+        itemNameString = getIntent().getExtras().getString("itemName");
         category = getIntent().getExtras().getString("category");
         menuKey = getIntent().getExtras().getString("menuKey");
         shopName = getIntent().getExtras().getString("shopAddress");
         userId = getIntent().getExtras().getString("userID");
-        favRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyFavorites");
+        cartRef = FirebaseDatabase.getInstance().getReference().child("MyCart").child(currentUser).child(shopName);
+        cartDetailRef = FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser).child(shopName);
+        favRef = FirebaseDatabase.getInstance().getReference().child("MyFavorites").child(currentUser);
+
+        myFavAdapter = new MyFavAdapter();
+        cartShopItemAdapter = new CartShopItemAdapter();
+        cartItemAdapter = new CartItemAdapter();
 
         favItemNamesText = (TextView) findViewById(R.id.fav_menu_iten_description_name_text);
         favButon = (ImageView) findViewById(R.id.item_description_fav);
@@ -124,7 +134,6 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
         GridLayoutManager gridLayoutManager1 = new GridLayoutManager(getApplicationContext(),3);
         nonVegToppingList.setLayoutManager(gridLayoutManager1);
 
-        cartRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart");
         foodRef = FirebaseDatabase.getInstance().getReference().child("NewShops").child(getIntent().getStringExtra("shopAddress")).child("MenuItem").child(category).child(menuKey);
         toppingRef = FirebaseDatabase.getInstance().getReference().child("NewShops").child(getIntent().getStringExtra("shopAddress")).child("MyTopping");
 
@@ -455,27 +464,8 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
             }
         });
 
-        cartRef.child(shopName).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.hasChild("itemNames"))
-                {
-                    String shopItemNames = snapshot.child("itemNames").getValue().toString()+",";
-                    shopItemNamesText.setText(shopItemNames);
-                }
-                else
-                {
-                    shopItemNamesText.setText("");
-                }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
-        cartRef.child(shopName).child("CartItems").addValueEventListener(new ValueEventListener() {
+        cartDetailRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists())
@@ -493,6 +483,7 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
 
             }
         });
+
         cartRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -548,57 +539,68 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
             }
         });
 
-
         favButon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                final Boolean[] itemAvailable = {false};
                 favRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
+
                         for (DataSnapshot ds : snapshot.getChildren()) {
 
                             String in = ds.child("itemName").getValue().toString();
                             if (itemName.getText().toString().equals(in)) {
                                 favRef = ds.getRef();
-                                favItemAvailable = true;
+                                itemAvailable[0] = true;
                             }
                         }
 
-                        if (favItemAvailable) {
+                        if (itemAvailable[0]) {
                             favButon.setVisibility(View.GONE);
                             favProgressBar.setVisibility(View.VISIBLE);
 
-                            HashMap hashMap = new HashMap();
-                            hashMap.put("itemPrice", totalCostText.getText().toString());
-                            hashMap.put("itemDescription", "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
 
+                            HashMap hashMap = new HashMap();
+                            hashMap.put("itemDescription","Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
+                            hashMap.put("itemPrice",totalCostText.getText().toString());
                             favRef.updateChildren(hashMap);
                             favButon.setVisibility(View.GONE);
                             favProgressBar.setVisibility(View.GONE);
-                            Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorites successfully...", Toast.LENGTH_SHORT).show();
 
                         } else {
                             favButon.setVisibility(View.GONE);
                             favProgressBar.setVisibility(View.VISIBLE);
-                            HashMap hashMap = new HashMap();
-                            hashMap.put("count", favItems + 1);
-                            hashMap.put("shopName", shopName);
-                            hashMap.put("sellerId", userId);
-                            hashMap.put("deliveryCharge", getIntent().getStringExtra("deliveryCharge"));
-                            hashMap.put("upi", getIntent().getStringExtra("upi"));
-                            hashMap.put("itemName", itemName.getText().toString());
-                            hashMap.put("itemPrice", totalCostText.getText().toString());
-                            hashMap.put("itemImage", imageUrl);
-                            hashMap.put("itemDescription", "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
+
+                            myFavAdapter.setCount(favItems+1);
+                            myFavAdapter.setDeliveryCharge(getIntent().getStringExtra("deliveryCharge"));
+                            myFavAdapter.setItemDescription("Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
+                            myFavAdapter.setItemImage(imageUrl);
+                            myFavAdapter.setItemName(itemName.getText().toString());
+                            myFavAdapter.setItemPrice(totalCostText.getText().toString());
+                            myFavAdapter.setSellerId(userId);
+                            myFavAdapter.setShopName(shopName);
+                            myFavAdapter.setUpi(getIntent().getStringExtra("upi"));
 
                             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
                             String currentDateandTime = sdf.format(new Date());
 
-                            FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyFavorites").child("MyFav" + currentDateandTime).updateChildren(hashMap);
-                            favButon.setVisibility(View.GONE);
-                            favProgressBar.setVisibility(View.GONE);
-                            Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorite successfully...", Toast.LENGTH_SHORT).show();
+                            ValueEventListener listener = new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    FirebaseDatabase.getInstance().getReference().child("MyFavorites").child(currentUser).child("MyFav" + currentDateandTime).setValue(myFavAdapter);
+                                    favButon.setVisibility(View.GONE);
+                                    favProgressBar.setVisibility(View.GONE);
+                                    Toast.makeText(MenuItemDescriptionActivity.this, "Item added to favorites successfully...", Toast.LENGTH_SHORT).show();
+                                }
 
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                }
+                            };
+                            FirebaseDatabase.getInstance().getReference().child("MyFavorites").child(currentUser).child("MyFav" + currentDateandTime).addListenerForSingleValueEvent(listener);
                         }
 
                     }
@@ -612,69 +614,91 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
             }
         });
 
-
-
-                addToCart.setOnClickListener(new View.OnClickListener() {
+        addToCart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        final Boolean[] itemCartAvailable = {false};
                         addToCart.setVisibility(View.GONE);
                         cartProgressBar.setVisibility(View.VISIBLE);
 
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
                         String currentDateandTime = sdf.format(new Date());
 
-                        cartRef.child(shopName).child("CartItems").addListenerForSingleValueEvent(new ValueEventListener() {
+                        cartDetailRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 for (DataSnapshot ds : snapshot.getChildren()) {
-
                                     String in = ds.child("itemName").getValue().toString();
                                     if (itemName.getText().toString().equals(in)) {
-                                        cartRef = ds.getRef();
-                                        itemAvailable = true;
+                                        cartDetailRef = ds.getRef();
+                                        itemCartAvailable[0] = true;
                                     }
-                                }
-                                if (itemAvailable) {
-                                    HashMap hashMap = new HashMap();
-                                    hashMap.put("itemPrice", totalCostText.getText().toString());
-                                    hashMap.put("itemCustomizedPrice", totalCostText.getText().toString());
-                                    hashMap.put("itemDescription", "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
 
-                                    cartRef.updateChildren(hashMap);
+
+                                }
+
+                                if (itemCartAvailable[0]) {
+
+                                    //itemDescription.setText("Yes");
+                                    HashMap hashMap = new HashMap();
+                                    hashMap.put("itemDescription","Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
+                                    hashMap.put("itemPrice",totalCostText.getText().toString());
+                                    hashMap.put("itemCustomizedPrice",totalCostText.getText().toString());
+                                    cartDetailRef.updateChildren(hashMap);
                                     Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
                                     addToCart.setVisibility(View.GONE);
                                     cartProgressBar.setVisibility(View.GONE);
                                     viewCart.setVisibility(View.VISIBLE);
+
                                 } else     {
-                                    HashMap hashMap1 = new HashMap();
-                                    hashMap1.put("count", shopItems + 1);
-                                    hashMap1.put("itemNames", shopItemNamesText.getText().toString() + itemName.getText().toString());
-                                    hashMap1.put("shopName", shopName);
-                                    hashMap1.put("sellerId", userId);
-                                    hashMap1.put("deliveryCharge", getIntent().getStringExtra("deliveryCharge"));
-                                    hashMap1.put("upi", getIntent().getStringExtra("upi"));
+                                    //itemDescription.setText("No");
+                                    cartShopItemAdapter.setCount(shopItems + 1);
+                                    cartShopItemAdapter.setItemNames(itemNameString);
+                                    cartShopItemAdapter.setShopName(shopName);
+                                    cartShopItemAdapter.setSellerId(userId);
+                                    cartShopItemAdapter.setDeliveryCharge(getIntent().getStringExtra("deliveryCharge"));
+                                    cartShopItemAdapter.setUpi(getIntent().getStringExtra("upi"));
 
-                                    FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(shopName).updateChildren(hashMap1);
-                                            {
-                                                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
-                                                String currentDateandTime = sdf.format(new Date());
+                                    ValueEventListener valueEventListener = new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                            cartRef.setValue(cartShopItemAdapter);
+                                        }
 
-                                                HashMap hashMap = new HashMap();
-                                                hashMap.put("count", cartItems + 1);
-                                                hashMap.put("itemName", itemName.getText().toString());
-                                                hashMap.put("itemPrice", totalCostText.getText().toString());
-                                                hashMap.put("itemCustomizedPrice", totalCostText.getText().toString());
-                                                hashMap.put("itemDescription", "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
-                                                hashMap.put("itemImage", imageUrl);
-                                                hashMap.put("itemQuantity", "1");
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) {
 
-                                                FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyCart").child(shopName).child("CartItems").child("CartItem" + currentDateandTime)
-                                                        .updateChildren(hashMap);
-                                                Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
-                                                addToCart.setVisibility(View.GONE);
-                                                cartProgressBar.setVisibility(View.GONE);
-                                                viewCart.setVisibility(View.VISIBLE);
-                                            }
+                                        }
+                                    };
+                                    cartRef.addListenerForSingleValueEvent(valueEventListener);
+
+                                    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
+                                    String currentDateandTime = sdf.format(new Date());
+                                    cartItemAdapter.setCount(cartItems + 1);
+                                    cartItemAdapter.setItemDescription( "Size : " + pizzaSize + "\nExtra Cheese : " + extraCheese + "\nCheese Burst : " + cheeseBurst + "\nThin Crust : " + thinCrust + "\nExtra Topping : " + toppingGlobal);
+                                    cartItemAdapter.setItemCustomizedPrice(totalCostText.getText().toString());
+                                    cartItemAdapter.setItemImage(imageUrl);
+                                    cartItemAdapter.setItemName(itemName.getText().toString());
+                                    cartItemAdapter.setItemPrice(totalCostText.getText().toString());
+                                    cartItemAdapter.setItemQuantity("1");
+
+                                    ValueEventListener valueEventListener1 = new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                            FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser).child(shopName).child("CartItem" + currentDateandTime).setValue(cartItemAdapter);
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) {
+
+                                        }
+                                    };
+                                    FirebaseDatabase.getInstance().getReference().child("CartItems").child(currentUser).child(shopName).child("CartItem" + currentDateandTime).addListenerForSingleValueEvent(valueEventListener1);
+
+                                    Toast.makeText(getApplicationContext(), "Item is added to cart successfully...", Toast.LENGTH_SHORT).show();
+                                    addToCart.setVisibility(View.GONE);
+                                    cartProgressBar.setVisibility(View.GONE);
+                                    viewCart.setVisibility(View.VISIBLE);
 
                                 }
                             }
@@ -688,12 +712,13 @@ public class MenuItemDescriptionActivity extends AppCompatActivity {
                     }
                 });
 
-                showVegToppingDetails();
-                showNonVegToppingDetails();
-            }
+        showVegToppingDetails();
+        showNonVegToppingDetails();
+
+    }
 
 
-            private void showVegToppingDetails() {
+    private void showVegToppingDetails() {
                 Query sort = toppingRef.child("VegTopping").orderByChild("count");
                 FirebaseRecyclerAdapter<ToppingAdapter, ToppingViewHolder> firebaseRecyclerAdapter =
                         new FirebaseRecyclerAdapter<ToppingAdapter, ToppingViewHolder>(

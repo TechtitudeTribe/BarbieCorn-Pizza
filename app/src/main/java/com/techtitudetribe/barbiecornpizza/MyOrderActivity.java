@@ -41,7 +41,7 @@ public class MyOrderActivity extends AppCompatActivity {
 
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser().getUid();
-        orderRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUser).child("MyOrders");
+        orderRef = FirebaseDatabase.getInstance().getReference().child("MyOrders").child(currentUser);
 
         progressBar = (ProgressBar) findViewById(R.id.my_orders_activity_progress_bar);
         recyclerView = (RecyclerView) findViewById(R.id.my_order_list_view);
@@ -108,7 +108,7 @@ public class MyOrderActivity extends AppCompatActivity {
                         }
 
                         myOrderViewHolder.setItemNames(myOrderAdapter.getItemNames());
-                        myOrderViewHolder.setItemNumber(myOrderAdapter.getItemNumber());
+                        myOrderViewHolder.setOrderId(myOrderAdapter.getOrderId());
                         myOrderViewHolder.setItemTotalAmount(myOrderAdapter.getItemTotalAmount());
                         myOrderViewHolder.setItemPlacedDate(myOrderAdapter.getItemPlacedDate());
                         myOrderViewHolder.setCount(myOrderAdapter.getCount());
@@ -141,10 +141,10 @@ public class MyOrderActivity extends AppCompatActivity {
             name.setText(itemNames);
         }
 
-        public void setItemNumber(String itemNumber)
+        public void setOrderId(String orderId)
         {
             TextView number = (TextView) mView.findViewById(R.id.my_order_item_numbers);
-            number.setText(itemNumber+" items");
+            number.setText("Order Id : #"+orderId);
         }
 
         public void setItemPlacedDate(String itemPlacedDate)
@@ -164,7 +164,6 @@ public class MyOrderActivity extends AppCompatActivity {
             TextView orderNumber = (TextView) mView.findViewById(R.id.my_order_item_order_number);
             orderNumber.setText(String.valueOf(count));
         }
-
 
     }
 

@@ -26,13 +26,19 @@
                 android:orientation="horizontal"
                 android:background="@color/creative_red"
                 android:padding="10dp">
+
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/ic_sign_out"
-                    app:tint="@color/white"
                     android:layout_alignParentRight="true"
-                    android:layout_margin="5dp"/>
+                    android:layout_marginStart="5dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:src="@drawable/ic_sign_out"
+                    app:tint="@color/white" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

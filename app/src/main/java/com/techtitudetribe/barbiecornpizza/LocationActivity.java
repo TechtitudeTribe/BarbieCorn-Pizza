@@ -69,7 +69,7 @@ public class LocationActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private CardView currentLocationCard;
     private LinearLayout cityNamesLayout, chooseCityCard;
-    private TextView kanth, chandpur, moradabad, noCurrentLocation;
+    private TextView kanth, chandpur, moradabad,kashipur, noCurrentLocation;
     private DatabaseReference coordinateRef, addRef;
     private TextView textLatitude, textLongitude, textLatitude2, textLongitude2;
     private Double lat1, long1, lat2, long2;
@@ -95,33 +95,34 @@ public class LocationActivity extends AppCompatActivity {
 
         spinner = (TextView) findViewById(R.id.choose_location_spinner);
         cityChoose = (TextView) findViewById(R.id.city_choose);
-        confirmLocation = (TextView) findViewById(R.id.location_confirm);
+        //confirmLocation = (TextView) findViewById(R.id.location_confirm);
         chooseCityCard = (LinearLayout) findViewById(R.id.choose_city_card);
         cityNamesLayout = (LinearLayout) findViewById(R.id.city_names_layout);
         cityGo = (TextView) findViewById(R.id.choose_location_go);
         kanth = (TextView) findViewById(R.id.choose_city_kanth);
         chandpur = (TextView) findViewById(R.id.choose_city_chandpur);
         moradabad = (TextView) findViewById(R.id.choose_city_moradabad);
-        noCurrentLocation = (TextView) findViewById(R.id.no_current_location);
-        currentLocationCard = (CardView) findViewById(R.id.current_location_card);
+        kashipur = (TextView) findViewById(R.id.choose_city_kashipur);
+        //noCurrentLocation = (TextView) findViewById(R.id.no_current_location);
+        //currentLocationCard = (CardView) findViewById(R.id.current_location_card);
         textLatitude = (TextView) findViewById(R.id.text_latitude);
         textLongitude = (TextView) findViewById(R.id.text_longitude);
         textLatitude2 = (TextView) findViewById(R.id.text_latitude2);
         textLongitude2 = (TextView) findViewById(R.id.text_longitude2);
         chooseCurrentLocation = (TextView) findViewById(R.id.choose_current_location);
         coordinateRef = FirebaseDatabase.getInstance().getReference().child("Shop Distances");
-        progressBar = (ProgressBar) findViewById(R.id.linear_progress_bar);
+        //progressBar = (ProgressBar) findViewById(R.id.linear_progress_bar);
         addProgressBar = (ProgressBar) findViewById(R.id.location_address_list_progress_bar);
-        manualAddress = (TextView) findViewById(R.id.manual_address);
+        //manualAddress = (TextView) findViewById(R.id.manual_address);
         addressLayout = (RelativeLayout) findViewById(R.id.location_address_list_layout);
 
         firebaseAuth = FirebaseAuth.getInstance();
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        //fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
         Animation open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.order_track_open);
         Animation close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.city_go_anim);
 
-        LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        /*LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 
         try {
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -151,7 +152,7 @@ public class LocationActivity extends AppCompatActivity {
                     });
             final AlertDialog alert = builder.create();
             alert.show();
-        }
+        }*/
 
         kanth.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,11 +161,12 @@ public class LocationActivity extends AppCompatActivity {
                 cityChoose.setText("Kanth");
                 cityNamesLayout.startAnimation(close);
                 cityNamesLayout.setVisibility(View.GONE);
-                addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Kanth");
-                displayaddressList();
-                currentLocationCard.setVisibility(View.VISIBLE);
+                //addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Kanth");
+                //displayaddressList();
+                //currentLocationCard.setVisibility(View.VISIBLE);
                 address = "Kanth";
-                coordinateRef.child("Kanth").addValueEventListener(new ValueEventListener() {
+                checkValidations();
+                /*coordinateRef.child("Kanth").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
@@ -185,7 +187,7 @@ public class LocationActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError error) {
 
                     }
-                });
+                });*/
 
             }
         });
@@ -197,10 +199,11 @@ public class LocationActivity extends AppCompatActivity {
                 cityNamesLayout.startAnimation(close);
                 address = "Chandpur";
                 cityNamesLayout.setVisibility(View.GONE);
-                addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Chandpur");
-                displayaddressList();
-                currentLocationCard.setVisibility(View.VISIBLE);
-                coordinateRef.child("Chandpur").addValueEventListener(new ValueEventListener() {
+                checkValidations();
+                //addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Chandpur");
+                //displayaddressList();
+                //currentLocationCard.setVisibility(View.VISIBLE);
+                /*coordinateRef.child("Chandpur").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
@@ -221,7 +224,7 @@ public class LocationActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError error) {
 
                     }
-                });
+                });*/
             }
         });
         moradabad.setOnClickListener(new View.OnClickListener() {
@@ -232,7 +235,8 @@ public class LocationActivity extends AppCompatActivity {
                 address = "Moradabad";
                 cityNamesLayout.startAnimation(close);
                 cityNamesLayout.setVisibility(View.GONE);
-                addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Moradabad");
+                checkValidations();
+                /*addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Moradabad");
                 displayaddressList();
                 currentLocationCard.setVisibility(View.VISIBLE);
                 coordinateRef.child("Moradabad").addValueEventListener(new ValueEventListener() {
@@ -256,16 +260,50 @@ public class LocationActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError error) {
 
                     }
-                });
-
+                });*/
             }
         });
+        kashipur.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //cityGo.setVisibility(View.VISIBLE);
+                cityChoose.setText("Kashipur");
+                address = "Kashipur";
+                cityNamesLayout.startAnimation(close);
+                cityNamesLayout.setVisibility(View.GONE);
+                checkValidations();
+                /*addRef = FirebaseDatabase.getInstance().getReference().child("ManualAddress").child("Moradabad");
+                displayaddressList();
+                currentLocationCard.setVisibility(View.VISIBLE);
+                coordinateRef.child("Moradabad").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            String latitude = snapshot.child("Latitude").getValue().toString();
+                            String longitude = snapshot.child("Longitude").getValue().toString();
 
-        addressList = (RecyclerView) findViewById(R.id.location_address_list);
+                            textLatitude.setText(latitude);
+                            textLongitude.setText(longitude);
+                            lat2 = Double.valueOf(textLatitude.getText().toString());
+                            long2 = Double.valueOf(textLongitude.getText().toString());
+                            lat1 = Double.valueOf(textLatitude2.getText().toString());
+                            long1 = Double.valueOf(textLongitude2.getText().toString());
+                            functionOne();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });*/
+            }
+        });
+        /*addressList = (RecyclerView) findViewById(R.id.location_address_list);
         LinearLayoutManager linearLayoutManager1 = new LinearLayoutManager(this);
         linearLayoutManager1.setReverseLayout(false);
         linearLayoutManager1.setStackFromEnd(false);
-        addressList.setLayoutManager(linearLayoutManager1);
+        addressList.setLayoutManager(linearLayoutManager1);*/
 
         spinner.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -280,14 +318,15 @@ public class LocationActivity extends AppCompatActivity {
                 }
             }
         });
-        cityGo.setOnClickListener(new View.OnClickListener() {
+
+        /*cityGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (cityChoose.getText().toString().equals("location...")) {
                     Toast.makeText(LocationActivity.this, "Please choose city...", Toast.LENGTH_SHORT).show();
                 } else {
 
-                    /*if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         // notify user
                         final AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
                         builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
@@ -314,32 +353,32 @@ public class LocationActivity extends AppCompatActivity {
                             ActivityCompat.requestPermissions(LocationActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
 
                         }
-                    }*/
+                    }
 
                 }
 
             }
-        });
+        });*/
 
-        confirmLocation.setOnClickListener(new View.OnClickListener() {
+        /*confirmLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 checkValidations();
             }
-        });
+        });*/
 
 
-        if (ActivityCompat.checkSelfPermission(LocationActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        /*if (ActivityCompat.checkSelfPermission(LocationActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
         } else {
             ActivityCompat.requestPermissions(LocationActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, requestCode);
 
-        }
+        }*/
 
         Animation open1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.order_track_open);
         Animation close1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.order_track_close);
 
-        manualAddress.setOnClickListener(new View.OnClickListener() {
+        /*manualAddress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (manualAddress.getText().toString().equals("Confirm")) {
@@ -369,11 +408,11 @@ public class LocationActivity extends AppCompatActivity {
 
                 }
             }
-        });
+        });*/
 
     }
 
-    private void functionOne() {
+    /*private void functionOne() {
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             // notify user
             final AlertDialog.Builder builder = new AlertDialog.Builder(LocationActivity.this);
@@ -402,9 +441,9 @@ public class LocationActivity extends AppCompatActivity {
 
             }
         }
-    }
+    }*/
 
-    private void getLocation() {
+    /*private void getLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -436,23 +475,23 @@ public class LocationActivity extends AppCompatActivity {
                 }
             }
         });
-    }
+    }*/
 
     private void checkValidations() {
-        if (chooseCurrentLocation.getText().toString().equals("current location")||chooseCurrentLocation.getText().toString().equals("Fetching Details..."))
+        if (TextUtils.isEmpty(address))
         {
             Toast.makeText(this, "Please choose your city...", Toast.LENGTH_SHORT).show();
         }
         else
         {
             Intent intent = new Intent(getApplicationContext(),PhoneVerificationActivity.class);
-            intent.putExtra("Address",chooseCurrentLocation.getText().toString());
+            intent.putExtra("Address",address);
             startActivity(intent);
         }
 
     }
 
-    @Override
+    /*@Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode)
         {
@@ -471,7 +510,7 @@ public class LocationActivity extends AppCompatActivity {
                 return;
             }
         }
-    }
+    }*/
 
     @Override
     protected void onStart() {
@@ -491,7 +530,7 @@ public class LocationActivity extends AppCompatActivity {
         finish();
     }
 
-    private void distance(double lat1, double long1, double lat2, double long2)
+    /*private void distance(double lat1, double long1, double lat2, double long2)
     {
         double longDiff = long1 - long2;
         double distance = Math.sin(deg2rad(lat1))
@@ -521,9 +560,9 @@ public class LocationActivity extends AppCompatActivity {
         }
         Toast.makeText(this,"Distance : "+distance,Toast.LENGTH_SHORT).show();
 
-    }
+    }*/
 
-    private double rad2deg(double distance) {
+    /*private double rad2deg(double distance) {
         return (distance * 180.0 / Math.PI);
     }
 
@@ -586,5 +625,5 @@ public class LocationActivity extends AppCompatActivity {
             TextView addressText = (TextView) mView.findViewById(R.id.cart_address_layout_text);
             addressText.setText(address);
         }
-    }
+    }*/
 }

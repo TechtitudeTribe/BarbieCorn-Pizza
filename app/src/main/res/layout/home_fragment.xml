@@ -11,59 +11,64 @@
         android:id="@+id/home_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+
         <ImageView
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
-            android:layout_width="36dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="2dp"
             android:layout_marginBottom="7dp"
-            android:layout_marginLeft="10dp"
-            android:translationZ="3dp"
-            android:layout_centerVertical="true"
-            android:layout_height="36dp"
-            android:src="@drawable/icon_home"
-            android:padding="7dp"
-            app:tint="@color/white"
             android:background="@drawable/square_background"
-            android:backgroundTint="@color/creative_red"/>
+            android:backgroundTint="@color/creative_red"
+            android:padding="7dp"
+            android:src="@drawable/icon_home"
+            android:translationZ="3dp"
+            app:tint="@color/white" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginLeft="55dp"
             android:orientation="horizontal">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="serif"
                 android:text="BarbieCorn"
                 android:textColor="@color/creative_red"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:fontFamily="serif"/>
+                android:textStyle="bold" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="serif"
                 android:text=" Pizza"
-                android:textStyle="bold"
                 android:textColor="@color/smoky_black"
                 android:textSize="18sp"
-                android:fontFamily="serif"/>
+                android:textStyle="bold" />
         </LinearLayout>
+
         <ImageView
             android:id="@+id/home_app_share_button"
-            android:layout_alignParentRight="true"
             android:layout_width="36dp"
-            android:layout_marginTop="2dp"
-            android:layout_marginBottom="7dp"
-            android:layout_marginRight="10dp"
-            android:translationZ="3dp"
-            android:layout_centerVertical="true"
             android:layout_height="36dp"
-            android:src="@drawable/ic_baseline_share_48"
-            android:padding="7dp"
-            app:tint="@color/white"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="2dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="7dp"
             android:background="@drawable/square_background"
-            android:backgroundTint="@color/creative_red"/>
+            android:backgroundTint="@color/creative_red"
+            android:padding="7dp"
+            android:src="@drawable/ic_baseline_share_48"
+            android:translationZ="3dp"
+            app:tint="@color/white" />
     </RelativeLayout>
 
     <androidx.cardview.widget.CardView

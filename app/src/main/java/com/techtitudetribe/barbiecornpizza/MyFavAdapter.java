@@ -2,12 +2,13 @@ package com.techtitudetribe.barbiecornpizza;
 
 public class MyFavAdapter {
     String itemName, itemPrice, itemImage, itemDescription, deliveryCharge, sellerId, upi, shopName;
+    long count;
 
     public MyFavAdapter() {
 
     }
 
-    public MyFavAdapter(String itemName, String itemPrice, String itemImage, String itemDescription, String deliveryCharge, String sellerId, String upi, String shopName) {
+    public MyFavAdapter(String itemName, String itemPrice, String itemImage, String itemDescription, String deliveryCharge, String sellerId, String upi, String shopName, long count) {
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemImage = itemImage;
@@ -16,6 +17,15 @@ public class MyFavAdapter {
         this.sellerId = sellerId;
         this.upi = upi;
         this.shopName = shopName;
+        this.count = count;
+    }
+
+    public long getCount() {
+        return count;
+    }
+
+    public void setCount(long count) {
+        this.count = count;
     }
 
     public String getItemName() {
